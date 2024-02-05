@@ -10,13 +10,18 @@
 #include <string>
 #include <vector>
 #include <iomanip>
+#include <cmath>
 
-#define SERIES_LENGHT 1300
+#define SERIES_LENGTH 1300
 
 using namespace std;
 
+// Function to calculate the mean of a vector of numbers within a range
+float calculateMeanInRange(const vector<float>& values, int start, int end);
 
+// Function to calculate the standard deviation of a vector of numbers within a range
+float calculateStandardDeviationInRange(const vector<float>& values, int start, int end);
 
-void test(int n);
+float calculateCorrelationCoefficient(const vector<float>& data_values, const vector<float>& query_values);
 
 #endif //TIME_SERIES_PATTERN_RECOGNITION_UTILITY_H
