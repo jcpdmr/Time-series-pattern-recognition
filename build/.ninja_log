@@ -1,0 +1,6 @@
+# ninja log v5
+46	128	1706881440890246632	Time-series-pattern-recognition	46fc3ad8cb82ff11
+0	46	1706881440810247502	CMakeFiles/Time-series-pattern-recognition.dir/utility.cpp.o	299a3b46a9955593
+1	50	1706881428942376599	CMakeFiles/Time-series-pattern-recognition.dir/main.cpp.o	9437d312989b3d81
+0	37	1706882489967125906	build.ninja	6b9dd750950beb8a
+0	31	1706882489967125906	build.ninja	6b9dd750950beb8a
