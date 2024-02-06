@@ -3,7 +3,7 @@
 
 float calculateMeanInRange(const vector<float>& values, int start, int end) {
     float sum = 0.0f;
-    for (int i = start; i <= end; ++i) {
+    for (int i = start; i < end; ++i) {
         sum += values[i];
     }
     return sum / (end - start);
@@ -12,7 +12,7 @@ float calculateMeanInRange(const vector<float>& values, int start, int end) {
 float calculateStandardDeviationInRange(const vector<float>& values, int start, int end) {
     float mean = calculateMeanInRange(values, start, end);
     float variance = 0.0f;
-    for (int i = start; i <= end; ++i) {
+    for (int i = start; i < end; ++i) {
         variance += pow(values[i] - mean, 2);
     }
     variance /= (end - start);
