@@ -1,6 +1,14 @@
 import re
 import os
-import matplotlib.pyplot as pyplot
+import matplotlib.pyplot as plt
+
+def custom_sort(string):
+    # Extract the number from the string using regular expressions
+    number = re.search(r'\d+', string).group()
+    # Convert the number to an integer and return it for sorting
+    return int(number)
+
+os.chdir("./")
 
 # Read close value
 data_file = "input_data/NVDA_close.txt"
@@ -11,13 +19,21 @@ with open(data_file, 'r') as file:
         value = float(line.strip())
         close_data.append((i, value))
 
-# Stampare i dati estratti
-for idx, value in close_data:
-    print(f"{idx}: {value}")
+# Read dates value
+data_file = "input_data/NVDA_date.txt"
+date_data = []
+
+with open(data_file, 'r') as file:
+    for i, line in enumerate(file, 1):
+        value = line.strip()
+        date_data.append(value)
 
 # Read all cross-correlation data
 output_folder = "output_data"
-files = os.listdir(output_folder)
+
+# Sorting the list using custom_sort function as key
+list_of_strings = os.listdir(output_folder)
+files = sorted(list_of_strings, key=custom_sort)
 
 cross_correlation_data = []
 
@@ -38,9 +54,34 @@ for cross_correlation_file in files:
             temp.append((i + offset, value))
             last_iter = i
         # Add zero padding at the end
-        for i in range(offset):
+        for i in range(offset - 1):
             temp.append((last_iter + i, 0))
 
     cross_correlation_data.append(temp)
 
 
+# Plotting
+fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(20, 15))
+
+axes[0].plot(date_data, [data[1] for data in close_data], label="Close")
+axes[0].set_ylabel('USD')
+axes[0].set_xticks(date_data[::90])
+axes[0].set_xticks(date_data[::15], minor=True)
+axes[0].grid(True, which="both")
+
+
+axes[1].plot(date_data, [data[1] for data in cross_correlation_data[3]], label="...")
+axes[1].set_ylabel('Cross-correlation')
+axes[1].set_xticks(date_data[::90])
+axes[1].set_xticks(date_data[::15], minor=True)
+axes[1].grid(True, which="both")
+
+axes[2].plot(date_data, [i if i < 29 else 0 for i in range(0,1258) ], label="...")
+axes[2].set_xlabel('Date')
+axes[2].set_ylabel('Cross-correlation')
+axes[2].set_xticks(date_data[::90])
+axes[2].set_xticks(date_data[::15], minor=True)
+axes[2].grid(True, which="both")
+
+plt.tight_layout()
+plt.savefig('./output_visualizer/cross-corr2')
