@@ -33,54 +33,83 @@ int main() {
             values.push_back(stof(tokens[4])); 
         }
     }
-
     // Remeber to close the file
     file.close();
 
-    const vector<float> uptrend_query = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f, 18.0f, 19.0f, 20.0f, 21.0f};
-    const float query_mean = calculateMeanInRange(uptrend_query, 0, uptrend_query.size());
-    const float query_std = calculateStandardDeviationInRange(uptrend_query, 0, uptrend_query.size());
+    // Create a bank of filters
+    const vector<vector<float>> filters = {
+        // 0: uptrend 1 week
+        // 1: uptrend 2 weeks
+        // 2: uptrend 3 weeks
+        // 3: uptrend 4 weeks
+        {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f},                             
+        {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f},
+        {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f, 18.0f, 19.0f, 20.0f, 21.0f},
+        {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f, 18.0f, 19.0f, 20.0f, 21.0f, 22.0f, 23.0f, 24.0f, 25.0f, 26.0f, 27.0f, 28.0f, 29.0f},
 
-    cout << "Query ---> mean: " << query_mean << "    std: " << query_std << endl;
+        // 4: downtrend 1 week
+        // 5: downtrend 2 weeks
+        // 6: downtrend 3 weeks
+        // 7: downtrend 4 weeks
+        {-1.0f, -2.0f, -3.0f, -4.0f, -5.0f, -6.0f, -7.0f},                             
+        {-1.0f, -2.0f, -3.0f, -4.0f, -5.0f, -6.0f, -7.0f, -8.0f, -9.0f, -10.0f, -11.0f, 1-2.0f, -13.0f, -14.0f, -15.0f},
+        {-1.0f, -2.0f, -3.0f, -4.0f, -5.0f, -6.0f, -7.0f, -8.0f, -9.0f, -10.0f, -11.0f, 1-2.0f, -13.0f, -14.0f, -15.0f, -16.0f, -17.0f, -18.0f, -19.0f, -20.0f, -21.0f},                    
+        {-1.0f, -2.0f, -3.0f, -4.0f, -5.0f, -6.0f, -7.0f, -8.0f, -9.0f, -10.0f, -11.0f, 1-2.0f, -13.0f, -14.0f, -15.0f, -16.0f, -17.0f, -18.0f, -19.0f, -20.0f, -21.0f, -22.0f, -23.0f, -24.0f, -25.0f, -26.0f, -27.0f, -28.0f, -29.0f},  
+        
+        // 8: cycle up-down 4 weeks (2 weeks uptrend, 2 weeks downtrend)
+        // 9: cycle up-down 8 weeks (4 weeks uptrend, 4 weeks downtrend)
+        {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 14.0f, 13.0f, 12.0f, 11.0f, 10.0f, 9.0f, 8.0f, 7.0f, 6.0f, 5.0f, 4.0f, 3.0f, 2.0f, 1.0f},
+        {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f, 18.0f, 19.0f, 20.0f, 21.0f, 22.0f, 23.0f, 24.0f, 25.0f, 26.0f, 27.0f, 28.0f, 29.0f, 28.0f, 27.0f, 26.0f, 25.0f, 24.0f, 23.0f, 22.0f, 21.0f, 20.0f, 19.0f, 18.0f, 17.0f, 16.0f, 15.0f, 14.0f, 13.0f, 12.0f, 11.0f, 10.0f, 9.0f, 8.0f, 7.0f, 6.0f, 5.0f, 4.0f, 3.0f, 2.0f, 1.0f},
+        
+        // 10: cycle down-up 4 weeks (2 weeks downtrend, 2 weeks uptrend)
+        // 11: cycle down-up 8 weeks (4 weeks downtrend, 4 weeks uptrend)
+        {-1.0f, -2.0f, -3.0f, -4.0f, -5.0f, -6.0f, -7.0f, -8.0f, -9.0f, -10.0f, -11.0f, -12.0f, -13.0f, -14.0f, -15.0f, -14.0f, -13.0f, -12.0f, -11.0f, -10.0f, -9.0f, -8.0f, -7.0f, -6.0f, -5.0f, -4.0f, -3.0f, -2.0f, -1.0f},
+        {-1.0f, -2.0f, -3.0f, -4.0f, -5.0f, -6.0f, -7.0f, -8.0f, -9.0f, -10.0f, -11.0f, -12.0f, -13.0f, -14.0f, -15.0f, -16.0f, -17.0f, -18.0f, -19.0f, -20.0f, -21.0f, -22.0f, -23.0f, -24.0f, -25.0f, -26.0f, -27.0f, -28.0f, -29.0f, -28.0f, -27.0f, -26.0f, -25.0f, -24.0f, -23.0f, -22.0f, -21.0f, -20.0f, -19.0f, -18.0f, -17.0f, -16.0f, -15.0f, -14.0f, -13.0f, -12.0f, -11.0f, -10.0f, -9.0f, -8.0f, -7.0f, -6.0f, -5.0f, -4.0f, -3.0f, -2.0f, -1.0f}
+        };
 
-    // At the first iteration we need to put the query central value in a way that 
-    // all the filter is "inside" the timeseries. For this reason we don't start
-    // from i = 0, but i = QUERY_LENGTH/2 = 3, in questo modo inizieremo dal quarto elemento
-    int offset = uptrend_query.size() / 2;
+    // print_filters(filters);
 
-    vector<double> correlation_results;
-	correlation_results.reserve(SERIES_LENGTH);
-    
-    for (int i = offset; i <= values.size() - offset; ++i) {
-        float window_values_mean = calculateMeanInRange(values, i - offset, i + offset + 1);
-        float window_values_std = calculateStandardDeviationInRange(values, i - offset, i + offset + 1);
+    for (int query_idx = 0; query_idx < filters.size(); query_idx++){
 
+        const vector<float> query = filters[query_idx];
+        const float query_mean = calculate_mean_in_range(query, 0, query.size());
+        const float query_std = calculate_standard_deviation_in_range(query, 0, query.size(), query_mean);
+        cout << "Query [" << setw(2) << setfill('0') << query_idx << "] ---> mean: " << query_mean << "    std: " << query_std << endl;
 
+        // At the first iteration we need to put the central query value in a way that 
+        // all the filter is "inside" the timeseries. For this reason we don't start
+        // from i = 0, but i = QUERY_LENGTH/2
+        int offset = query.size() / 2;
 
-        double sum = 0.0f;
-        for (size_t j = i - offset; j < i + offset + 1 ; ++j) {
-            sum += (values[j] - window_values_mean) * (uptrend_query[j - i + offset] - query_mean);
+        vector<float> zero_norm_cross_correlation_results;
+        zero_norm_cross_correlation_results.reserve(SERIES_LENGTH);
+        
+        for (int i = offset; i <= values.size() - offset; ++i) {
+            const float window_values_mean = calculate_mean_in_range(values, i - offset, i + offset + 1);
+            const float window_values_std = calculate_standard_deviation_in_range(values, i - offset, i + offset + 1, window_values_mean);
+
+            float zn_cc_sum = 0.0;
+            for (size_t j = i - offset; j < i + offset + 1 ; ++j) {
+                zn_cc_sum += (values[j] - window_values_mean) * (query[j - i + offset] - query_mean);
+            }
+
+            float zn_corr = zn_cc_sum / (query.size() * window_values_std * query_std);
+            // cout << "[" << setw(4) << setfill('0') << i << "] mean: " << fixed << setprecision(5) << window_values_mean << "  std: " << fixed << setprecision(5) <<  window_values_std << "  zn_cc_sum: " << fixed << setprecision(5) << zn_cc_sum << "  zn_corr: " << fixed << setprecision(8) << zn_corr << endl;
+            zero_norm_cross_correlation_results.push_back(zn_corr);
+
         }
 
-        double corr = sum / (uptrend_query.size() * window_values_std * query_std);
-        cout << "[" << setw(4) << setfill('0') << i << "] mean: " << fixed << setprecision(5) << window_values_mean << "  std: " << fixed << setprecision(5) <<  window_values_std << "  sum: " << fixed << setprecision(5) << sum << "  corr: " << fixed << setprecision(8) << corr << endl;
-
-        correlation_results.push_back(corr);
-
-        // cout << "Correlation coefficient for window " << i << ": " << corr << endl;
-    }
-
-    // Save data
-    ofstream output_file("../output_data/correlation.csv");
-    if (output_file.is_open()) {
-        for (float value : correlation_results) {
-            output_file << value << "\n";
+        // Save data
+        ofstream output_file("../output_data/zn_cross_correlation"+ to_string(query_idx) + "_filterlen" + to_string(query.size()) +".txt");
+        if (output_file.is_open()) {
+            for (float value : zero_norm_cross_correlation_results) {
+                output_file << value << "\n";
+            }
+            output_file.close();
+            cout << "Output data written output_data/zn_cross_correlation"+ to_string(query_idx) + ".txt" << endl;
+        } else {
+            cerr << "Unable to open output_data/zn_cross_correlation"+ to_string(query_idx) + ".txt" << endl;
         }
-        output_file.close();
-        cout << "Output data written output_data/correlation.csv" << endl;
-    } else {
-        cerr << "Unable to open output_data/correlation.csv" << endl;
     }
-
     return 0;
 }

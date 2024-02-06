@@ -17,11 +17,13 @@
 using namespace std;
 
 // Function to calculate the mean of a vector of numbers within a range
-float calculateMeanInRange(const vector<float>& values, int start, int end);
+float calculate_mean_in_range(const vector<float>& values, int start, int end);
 
 // Function to calculate the standard deviation of a vector of numbers within a range
-float calculateStandardDeviationInRange(const vector<float>& values, int start, int end);
+float calculate_standard_deviation_in_range(const vector<float>& values, int start, int end, const float& mean_in_range);
 
-float calculateCorrelationCoefficient(const vector<float>& data_values, const vector<float>& query_values);
+
+// Print filters
+void print_filters(const vector<vector<float>> filters);
 
 #endif //TIME_SERIES_PATTERN_RECOGNITION_UTILITY_H
