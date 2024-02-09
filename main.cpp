@@ -2,7 +2,7 @@
 
 int main() {
     // Open the file
-    ifstream file("../input_data/NVDA.csv");
+    ifstream file("../input_data/household_power_consumption.txt");
     if (!file.is_open()) {
         cerr << "Error opening the file!" << endl;
         return 1;
@@ -15,24 +15,30 @@ int main() {
 
     string line;
 
-	// Need to skip first line (because it contains the header row)
+	// Skip first line (because it contains the header row)
 	getline(file, line);
 
     while (getline(file, line)) {
-        istringstream line_stream(line);
-        string token;
-        vector<string> tokens;
-		tokens.reserve(7 * SERIES_LENGTH);
+            istringstream iss(line);
+            string token;
 
-        while (getline(line_stream, token, ',')) {
-            tokens.push_back(token);
+            // Read the values of Date and Time columns
+            getline(iss, token, ';'); // Date
+            string date = token;
+            getline(iss, token, ';'); // Time
+            date += " " + token; // Combine Date and Time
+
+            // Read the value of the Global_active_power column
+            getline(iss, token, ';');
+            float power;
+            // In case of missing data (symbol "?") power gets 0
+            istringstream(token) >> power;
+            
+            // Add the values to the vectors
+            dates.push_back(date);
+            values.push_back(power);
         }
-        if (tokens.size() >= 6) {
-			// Get date and close value
-            dates.push_back(tokens[0]);
-            values.push_back(stof(tokens[4])); 
-        }
-    }
+
     // Remeber to close the file
     file.close();
 
@@ -69,6 +75,9 @@ int main() {
 
     // print_filters(filters);
 
+    auto start_benchmark = chrono::high_resolution_clock::now();
+
+    #pragma omp parallel for shared(cerr, filters, cout, values) default(none)
     for (int query_idx = 0; query_idx < filters.size(); query_idx++){
 
         const vector<float> query = filters[query_idx];
@@ -111,5 +120,10 @@ int main() {
             cerr << "Unable to open output_data/zn_cross_correlation"+ to_string(query_idx) + ".txt" << endl;
         }
     }
+
+    auto stop_benchmark = chrono::high_resolution_clock::now();
+    auto duration_benchmark = chrono::duration_cast<chrono::milliseconds >(stop_benchmark - start_benchmark).count();
+    
+    cout << "Benchmark elapsed time: " << duration_benchmark << " ms" << endl;
     return 0;
 }

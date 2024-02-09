@@ -11,8 +11,9 @@
 #include <vector>
 #include <iomanip>
 #include <cmath>
+#include <chrono>
 
-#define SERIES_LENGTH 1300
+#define SERIES_LENGTH 101000
 
 using namespace std;
 
