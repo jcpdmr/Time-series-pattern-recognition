@@ -1,7 +1,6 @@
 import re
 import os
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 import time
 from datetime import datetime
 
@@ -18,7 +17,7 @@ power_data : list[float] = []
 
 format = "%d/%m/%Y %H:%M:%S"
 
-with open("input_data/household_power_consumption.txt", "r") as file:
+with open("input_data/household_power_consumption_short.txt", "r") as file:
     # Skip the header
     next(file)
     
@@ -38,7 +37,7 @@ with open("input_data/household_power_consumption.txt", "r") as file:
             power = 0.0
         
         # Append the extracted data to the respective lists
-        date_data.append(date_time)
+        date_data.append(converted_date_time)
         power_data.append(power)
 
 
@@ -77,25 +76,37 @@ for cross_correlation_file in files:
 print("Start plotting")
 
 # Plotting
-
-mpl.rcParams['path.simplify'] = True
-
-mpl.rcParams['path.simplify_threshold'] = 0.0
-fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(30, 15))
+fig, axes = plt.subplots(nrows=4, ncols=1, figsize=(70, 20))
 
 start_time = time.time()
-axes[0].plot(date_data[::1440], power_data[::1440], label="Power")
-axes[0].set_ylabel('MW?')
-axes[0].set_xticks(date_data[::500000])
-axes[0].set_xticks(date_data[::100000], minor=True)
-# axes[0].grid(True, which="both")
+axes[0].plot(date_data[::720], power_data[::720], label="Household Active Power")
+axes[0].set_ylabel('kW')
+axes[0].set_title("Household Active Power")
+axes[0].set_xticks(date_data[::133920])
+axes[0].set_xticks(date_data[::44640], minor=True)
+axes[0].grid(True, which="both")
 
 
-axes[1].plot(date_data[::1440], [data[1] for data in cross_correlation_data[3][::1440]], label="...")
-axes[1].set_ylabel('Cross-correlation')
-axes[1].set_xticks(date_data[::500000])
-axes[1].set_xticks(date_data[::100000], minor=True)
+axes[1].plot(date_data[::720], [data[1] for data in cross_correlation_data[0][::720]], label="...")
+axes[1].set_ylabel('Uptrend 1 week')
+axes[1].set_xticks(date_data[::133920])
+axes[1].set_xticks(date_data[::44640], minor=True)
 axes[1].grid(True, which="both")
+axes[1].axhline(y=0, color="black", linestyle=(0, (5, 10)), alpha=0.5)
+
+axes[2].plot(date_data[::720], [data[1] for data in cross_correlation_data[1][::720]], label="...")
+axes[2].set_ylabel('Uptrend 4 weeks')
+axes[2].set_xticks(date_data[::133920])
+axes[2].set_xticks(date_data[::44640], minor=True)
+axes[2].grid(True, which="both")
+axes[2].axhline(y=0, color="black", linestyle=(0, (5, 10)), alpha=0.5)
+
+axes[3].plot(date_data[::720], [data[1] for data in cross_correlation_data[2][::720]], label="...")
+axes[3].set_ylabel('Uptrend 8 weeks')
+axes[3].set_xticks(date_data[::133920])
+axes[3].set_xticks(date_data[::44640], minor=True)
+axes[3].grid(True, which="both")
+axes[3].axhline(y=0, color="black", linestyle=(0, (5, 10)), alpha=0.5)
 
 # axes[2].plot(date_data, [i if i < 29 else 0 for i in range(0,1258) ], label="...")
 # axes[2].set_xlabel('Date')

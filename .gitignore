@@ -2,3 +2,4 @@ build/
 output_data/*
 output_visualizer/*
 input_data/household_power_consumption.txt
+input_data/household_power_consumption_short.txt

@@ -2,7 +2,7 @@
 
 int main() {
     // Open the file
-    ifstream file("../input_data/household_power_consumption.txt");
+    ifstream file("../input_data/household_power_consumption_short.txt");
     if (!file.is_open()) {
         cerr << "Error opening the file!" << endl;
         return 1;
@@ -42,38 +42,25 @@ int main() {
     // Remeber to close the file
     file.close();
 
+    vector<vector<float>> temp_filter;
+    temp_filter.push_back(create_filter_trend_n_weeks(1, true));
+    temp_filter.push_back(create_filter_trend_n_weeks(4, true));
+    temp_filter.push_back(create_filter_trend_n_weeks(8, true));
+
+    temp_filter.push_back(create_filter_trend_n_weeks(1, false));
+    temp_filter.push_back(create_filter_trend_n_weeks(4, false));
+    temp_filter.push_back(create_filter_trend_n_weeks(8, false));
+
+    temp_filter.push_back(create_filter_cycle_n_weeks(4, true));
+    temp_filter.push_back(create_filter_cycle_n_weeks(8, true));
+
+
+    temp_filter.push_back(create_filter_cycle_n_weeks(4, false));
+    temp_filter.push_back(create_filter_cycle_n_weeks(8, false));
+
+
     // Create a bank of filters
-    const vector<vector<float>> filters = {
-        // 0: uptrend 1 week
-        // 1: uptrend 2 weeks
-        // 2: uptrend 3 weeks
-        // 3: uptrend 4 weeks
-        {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f},                             
-        {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f},
-        {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f, 18.0f, 19.0f, 20.0f, 21.0f},
-        {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f, 18.0f, 19.0f, 20.0f, 21.0f, 22.0f, 23.0f, 24.0f, 25.0f, 26.0f, 27.0f, 28.0f, 29.0f},
-
-        // 4: downtrend 1 week
-        // 5: downtrend 2 weeks
-        // 6: downtrend 3 weeks
-        // 7: downtrend 4 weeks
-        {-1.0f, -2.0f, -3.0f, -4.0f, -5.0f, -6.0f, -7.0f},                             
-        {-1.0f, -2.0f, -3.0f, -4.0f, -5.0f, -6.0f, -7.0f, -8.0f, -9.0f, -10.0f, -11.0f, 1-2.0f, -13.0f, -14.0f, -15.0f},
-        {-1.0f, -2.0f, -3.0f, -4.0f, -5.0f, -6.0f, -7.0f, -8.0f, -9.0f, -10.0f, -11.0f, 1-2.0f, -13.0f, -14.0f, -15.0f, -16.0f, -17.0f, -18.0f, -19.0f, -20.0f, -21.0f},                    
-        {-1.0f, -2.0f, -3.0f, -4.0f, -5.0f, -6.0f, -7.0f, -8.0f, -9.0f, -10.0f, -11.0f, 1-2.0f, -13.0f, -14.0f, -15.0f, -16.0f, -17.0f, -18.0f, -19.0f, -20.0f, -21.0f, -22.0f, -23.0f, -24.0f, -25.0f, -26.0f, -27.0f, -28.0f, -29.0f},  
-        
-        // 8: cycle up-down 4 weeks (2 weeks uptrend, 2 weeks downtrend)
-        // 9: cycle up-down 8 weeks (4 weeks uptrend, 4 weeks downtrend)
-        {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 14.0f, 13.0f, 12.0f, 11.0f, 10.0f, 9.0f, 8.0f, 7.0f, 6.0f, 5.0f, 4.0f, 3.0f, 2.0f, 1.0f},
-        {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f, 12.0f, 13.0f, 14.0f, 15.0f, 16.0f, 17.0f, 18.0f, 19.0f, 20.0f, 21.0f, 22.0f, 23.0f, 24.0f, 25.0f, 26.0f, 27.0f, 28.0f, 29.0f, 28.0f, 27.0f, 26.0f, 25.0f, 24.0f, 23.0f, 22.0f, 21.0f, 20.0f, 19.0f, 18.0f, 17.0f, 16.0f, 15.0f, 14.0f, 13.0f, 12.0f, 11.0f, 10.0f, 9.0f, 8.0f, 7.0f, 6.0f, 5.0f, 4.0f, 3.0f, 2.0f, 1.0f},
-        
-        // 10: cycle down-up 4 weeks (2 weeks downtrend, 2 weeks uptrend)
-        // 11: cycle down-up 8 weeks (4 weeks downtrend, 4 weeks uptrend)
-        {-1.0f, -2.0f, -3.0f, -4.0f, -5.0f, -6.0f, -7.0f, -8.0f, -9.0f, -10.0f, -11.0f, -12.0f, -13.0f, -14.0f, -15.0f, -14.0f, -13.0f, -12.0f, -11.0f, -10.0f, -9.0f, -8.0f, -7.0f, -6.0f, -5.0f, -4.0f, -3.0f, -2.0f, -1.0f},
-        {-1.0f, -2.0f, -3.0f, -4.0f, -5.0f, -6.0f, -7.0f, -8.0f, -9.0f, -10.0f, -11.0f, -12.0f, -13.0f, -14.0f, -15.0f, -16.0f, -17.0f, -18.0f, -19.0f, -20.0f, -21.0f, -22.0f, -23.0f, -24.0f, -25.0f, -26.0f, -27.0f, -28.0f, -29.0f, -28.0f, -27.0f, -26.0f, -25.0f, -24.0f, -23.0f, -22.0f, -21.0f, -20.0f, -19.0f, -18.0f, -17.0f, -16.0f, -15.0f, -14.0f, -13.0f, -12.0f, -11.0f, -10.0f, -9.0f, -8.0f, -7.0f, -6.0f, -5.0f, -4.0f, -3.0f, -2.0f, -1.0f}
-        };
-
-    // print_filters(filters);
+    const vector<vector<float>> filters = temp_filter;
 
     auto start_benchmark = chrono::high_resolution_clock::now();
 
@@ -109,15 +96,16 @@ int main() {
         }
 
         // Save data
-        ofstream output_file("../output_data/zn_cross_correlation"+ to_string(query_idx) + "_filterlen" + to_string(query.size()) +".txt");
+        string file_name = "../output_data/zn_cross_correlation"+ to_string(query_idx) + "_filterlen" + to_string(query.size()) +".txt";
+        ofstream output_file(file_name);
         if (output_file.is_open()) {
             for (float value : zero_norm_cross_correlation_results) {
                 output_file << value << "\n";
             }
             output_file.close();
-            cout << "Output data written output_data/zn_cross_correlation"+ to_string(query_idx) + ".txt" << endl;
+            cout << file_name << endl;
         } else {
-            cerr << "Unable to open output_data/zn_cross_correlation"+ to_string(query_idx) + ".txt" << endl;
+            cerr << file_name << endl;
         }
     }
 
