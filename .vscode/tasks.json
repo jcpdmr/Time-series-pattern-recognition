@@ -12,7 +12,7 @@
                 "-g",
                 "-G",
                 "-o",
-                "${workspaceFolder}/main",
+                "${workspaceFolder}/build/Time-series-pattern-recognition",
                 "${workspaceFolder}/main.cu"
             ],
             "group": {
@@ -23,9 +23,12 @@
         {
             "label": "Run CUDA Application",
             "type": "shell",
-            "command": "${workspaceFolder}/main",
+            "command": "${workspaceFolder}/build/Time-series-pattern-recognition",
             "group": {
                 "kind": "build"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/build"
             }
         },
         {
