@@ -13,7 +13,7 @@ float calculate_standard_deviation_in_range(const vector<float>& values, int sta
     for (int i = start; i < end; ++i) {
         variance += pow(values[i] - mean_in_range, 2);
     }
-    variance /= (end - start);
+    variance /= (end - start - 1);
     return sqrt(variance);
 }
 

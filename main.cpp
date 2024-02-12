@@ -42,21 +42,21 @@ int main() {
     // Remeber to close the file
     file.close();
 
-    vector<vector<float>> temp_filter;
-    temp_filter.push_back(create_filter_trend_n_weeks(1, true));
-    temp_filter.push_back(create_filter_trend_n_weeks(4, true));
-    temp_filter.push_back(create_filter_trend_n_weeks(8, true));
+    vector<vector<float>> temp_filter = {{1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f}};
+    // temp_filter.push_back(create_filter_trend_n_weeks(1, true));
+    // temp_filter.push_back(create_filter_trend_n_weeks(4, true));
+    // temp_filter.push_back(create_filter_trend_n_weeks(8, true));
 
-    temp_filter.push_back(create_filter_trend_n_weeks(1, false));
-    temp_filter.push_back(create_filter_trend_n_weeks(4, false));
-    temp_filter.push_back(create_filter_trend_n_weeks(8, false));
+    // temp_filter.push_back(create_filter_trend_n_weeks(1, false));
+    // temp_filter.push_back(create_filter_trend_n_weeks(4, false));
+    // temp_filter.push_back(create_filter_trend_n_weeks(8, false));
 
-    temp_filter.push_back(create_filter_cycle_n_weeks(4, true));
-    temp_filter.push_back(create_filter_cycle_n_weeks(8, true));
+    // temp_filter.push_back(create_filter_cycle_n_weeks(4, true));
+    // temp_filter.push_back(create_filter_cycle_n_weeks(8, true));
 
 
-    temp_filter.push_back(create_filter_cycle_n_weeks(4, false));
-    temp_filter.push_back(create_filter_cycle_n_weeks(8, false));
+    // temp_filter.push_back(create_filter_cycle_n_weeks(4, false));
+    // temp_filter.push_back(create_filter_cycle_n_weeks(8, false));
 
 
     // Create a bank of filters
@@ -64,7 +64,7 @@ int main() {
 
     auto start_benchmark = chrono::high_resolution_clock::now();
 
-    #pragma omp parallel for shared(cerr, filters, cout, values) default(none)
+    // #pragma omp parallel for shared(cerr, filters, cout, values) default(none)
     for (int query_idx = 0; query_idx < filters.size(); query_idx++){
 
         const vector<float> query = filters[query_idx];
@@ -90,7 +90,9 @@ int main() {
             }
 
             float zn_corr = zn_cc_sum / (query.size() * window_values_std * query_std);
-            // cout << "[" << setw(4) << setfill('0') << i << "] mean: " << fixed << setprecision(5) << window_values_mean << "  std: " << fixed << setprecision(5) <<  window_values_std << "  zn_cc_sum: " << fixed << setprecision(5) << zn_cc_sum << "  zn_corr: " << fixed << setprecision(8) << zn_corr << endl;
+            // if ((i < offset + 5) || (i > SERIES_LENGTH - offset - 5)){
+            //     cout << "[" << setw(4) << setfill('0') << i << "] mean: " << fixed << setprecision(5) << window_values_mean << "  std: " << fixed << setprecision(5) <<  window_values_std << "  zn_cc_sum: " << fixed << setprecision(5) << zn_cc_sum << "  zn_corr: " << fixed << setprecision(8) << zn_corr << endl;
+            // }
             zero_norm_cross_correlation_results.push_back(zn_corr);
 
         }

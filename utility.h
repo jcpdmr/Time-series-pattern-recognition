@@ -13,7 +13,7 @@
 #include <cmath>
 #include <chrono>
 
-#define SERIES_LENGTH 2100000
+#define SERIES_LENGTH 525600
 
 using namespace std;
 
