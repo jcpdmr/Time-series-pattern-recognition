@@ -42,37 +42,69 @@ int main() {
     // Remeber to close the file
     file.close();
 
-    float *d_values, *d_means;
-    checkCuda(cudaMalloc((void**)&d_values, SERIES_LENGTH * sizeof(float)));
-    checkCuda(cudaMalloc((void**)&d_means, SERIES_LENGTH * sizeof(float)));
-
-    // Copying dei dati dalla CPU alla GPU
-    checkCuda(cudaMemcpy(d_values, values.data(), SERIES_LENGTH * sizeof(float), cudaMemcpyHostToDevice));
-
     const int window_size = 11;
     const int block_size = 256;
     const int n_blocks = (SERIES_LENGTH + block_size - 1) / block_size;
 
-    calculate_means_in_range<<<n_blocks, block_size>>>(d_values, d_means, window_size, SERIES_LENGTH);
-    checkCuda(cudaGetLastError());
+    const vector<float> filter = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f, 10.0f, 11.0f};
 
+    float *d_values, *d_means, *d_stds, *d_znccs, *d_filter;
+    checkCudaErrors(cudaMalloc((void**)&d_values, SERIES_LENGTH * sizeof(float)));
+    checkCudaErrors(cudaMalloc((void**)&d_means, SERIES_LENGTH * sizeof(float)));
+    checkCudaErrors(cudaMalloc((void**)&d_stds, SERIES_LENGTH * sizeof(float)));
+    checkCudaErrors(cudaMalloc((void**)&d_filter, filter.size() * sizeof(float)));
+    checkCudaErrors(cudaMalloc((void**)&d_znccs, SERIES_LENGTH * sizeof(float)));
+
+    // Copying data from CPU to GPU
+    checkCudaErrors(cudaMemcpy(d_values, values.data(), SERIES_LENGTH * sizeof(float), cudaMemcpyHostToDevice));
+    checkCudaErrors(cudaMemcpy(d_filter, filter.data(), filter.size() * sizeof(float), cudaMemcpyHostToDevice));
+
+    calculate_means_windowed<<<n_blocks, block_size>>>(d_values, d_means, window_size, SERIES_LENGTH);
+    checkCudaErrors(cudaGetLastError());
     // Wait for the kernel execution to finish
-    checkCuda(cudaDeviceSynchronize());
+    checkCudaErrors(cudaDeviceSynchronize());
+
+    calculate_stds_windowed<<<n_blocks, block_size>>>(d_values, d_means, d_stds, window_size, SERIES_LENGTH);
+    checkCudaErrors(cudaGetLastError());
+    // Wait for the kernel execution to finish
+    checkCudaErrors(cudaDeviceSynchronize());
+
+    calculate_znccs_windowed<<<n_blocks, block_size>>>(d_values, d_means, d_stds, d_znccs, d_filter, 6.0f, 3.3166247903554, window_size, SERIES_LENGTH);
+    checkCudaErrors(cudaGetLastError());
+    // Wait for the kernel execution to finish
+    checkCudaErrors(cudaDeviceSynchronize());
 
     // Copy results from GPU to CPU
     vector<float> means(SERIES_LENGTH, 0.0f);
-    checkCuda(cudaMemcpy(means.data(), d_means, SERIES_LENGTH * sizeof(float), cudaMemcpyDeviceToHost));
+    vector<float> stds(SERIES_LENGTH, 0.0f);
+    vector<float> znccs(SERIES_LENGTH, 0.0f);
+    checkCudaErrors(cudaMemcpy(means.data(), d_means, SERIES_LENGTH * sizeof(float), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(stds.data(), d_stds, SERIES_LENGTH * sizeof(float), cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaMemcpy(znccs.data(), d_znccs, SERIES_LENGTH * sizeof(float), cudaMemcpyDeviceToHost));
 
     // Free resources
     cudaFree(d_values);
     cudaFree(d_means);
+    cudaFree(d_stds);
+    cudaFree(d_znccs);
+    cudaFree(d_filter);
 
     // Print results
-    for (int i = 0; i < SERIES_LENGTH; ++i) {
-        if ((i < window_size + 20) || (i > SERIES_LENGTH - window_size - 20)){
-            cout << "Mean at index " << i << ": " << means[i] << endl;
-        }
-    }
+    // for (int i = 0; i < SERIES_LENGTH; ++i) {
+    //     if ((i < window_size + 5) || (i > SERIES_LENGTH - window_size - 5)){
+    //         cout << "Means at index " << i << ": " << means[i] << endl;
+    //     }
+    // }
+    // for (int i = 0; i < SERIES_LENGTH; ++i) {
+    //     if ((i < window_size + 5) || (i > SERIES_LENGTH - window_size - 5)){
+    //         cout << "Std at index " << i << ": " << stds[i] << endl;
+    //     }
+    // }
+    // for (int i = 0; i < SERIES_LENGTH; ++i) {
+    //     if ((i < window_size + 5) || (i > SERIES_LENGTH - window_size - 5)){
+    //         cout << "Zncc at index " << i << ": " << znccs[i] << endl;
+    //     }
+    // }
 
     cout << "Finished" << endl;
 
