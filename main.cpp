@@ -2,7 +2,7 @@
 
 int main() {
     // Open the file
-    ifstream file("../input_data/household_power_consumption_supershort.txt");
+    ifstream file("../input_data/household_power_consumption_short.txt");
     if (!file.is_open()) {
         cerr << "Error opening the file!" << endl;
         return 1;

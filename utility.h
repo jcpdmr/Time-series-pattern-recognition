@@ -14,15 +14,9 @@
 #include <chrono>
 #include <map>
 
-#define SERIES_LENGTH 52560
+#define SERIES_LENGTH 525600
 
 using namespace std;
-
-// Calculate the mean of a vector of numbers within a range
-float calculate_mean_in_range(const vector<float>& values, int start, int end);
-
-// Calculate the standard deviation of a vector of numbers within a range
-float calculate_standard_deviation_in_range(const vector<float>& values, int start, int end, const float& mean_in_range);
 
 void calculate_means_windowed(const vector<float>& values, map<int,vector<float>>& means, int window_size, int series_length);
 void calculate_stds_windowed(const vector<float>& values, const map<int,vector<float>>& means, map<int,vector<float>>& stds, int window_size, int series_length);
@@ -34,9 +28,5 @@ vector<float> create_filter_trend_n_weeks(const int n_of_weeks, bool uptrend);
 // Create a cycle filter for n weeks, up_then_down true if first half of weeks uptrend an other half downtrend, false if 
 // first half of weeks downtrend an other half uptrend
 vector<float> create_filter_cycle_n_weeks(const int n_of_weeks, bool up_then_down);
-
-
-// Print filters
-void print_filters(const vector<vector<float>>& filters);
 
 #endif //TIME_SERIES_PATTERN_RECOGNITION_UTILITY_H

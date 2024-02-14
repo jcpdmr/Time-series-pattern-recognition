@@ -1,22 +1,5 @@
 #include "utility.h"
 
-float calculate_mean_in_range(const vector<float>& values, int start, int end) {
-    float sum = 0.0f;
-    for (int i = start; i < end; ++i) {
-        sum += values[i];
-    }
-    return sum / (end - start);
-}
-
-float calculate_standard_deviation_in_range(const vector<float>& values, int start, int end, const float& mean_in_range) {
-    float variance = 0.0f;
-    for (int i = start; i < end; ++i) {
-        variance += pow(values[i] - mean_in_range, 2);
-    }
-    variance /= (end - start - 1);
-    return sqrt(variance);
-}
-
 void calculate_means_windowed(const vector<float>& values, map<int,vector<float>>& means, int window_size, int series_length) {
     for(int idx = window_size / 2; idx < series_length - window_size / 2; idx++){
         float sum = 0.0f;
@@ -48,16 +31,6 @@ void calculate_znccs_windowed(const vector<float>& values, const map<int,vector<
             // }
         }
         zncc[window_size][idx] = (zncc_sum / (window_size * (stds.find(window_size)->second[idx]) * filter_std));
-    }
-}
-
-void print_filters(const vector<vector<float>>& filters){
-    for (const vector<float>& query : filters){
-        cout << "Query: ";
-        for(float value : query){
-            cout << value << ", ";
-        }
-        cout << endl;
     }
 }
 
