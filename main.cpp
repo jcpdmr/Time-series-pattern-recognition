@@ -62,9 +62,42 @@ int main() {
     // Create a bank of filters
     const vector<vector<float>> filters = temp_filter;
 
+    cout << "Executing benchmark..." << endl;
     auto start_benchmark = chrono::high_resolution_clock::now();
 
+    // vector<vector<float>> SADs(filters.size());
+    
+    // for (int query_idx = 0; query_idx < filters.size(); query_idx++){
+    //     const vector<float> query = filters[query_idx];
+    //     const int window_size = query.size();
+    //     SADs[query_idx] = vector<float>(SERIES_LENGTH, 0.0f);
+    //     #pragma omp parallel for
+    //     for(int idx = window_size / 2; idx < SERIES_LENGTH - window_size / 2; idx++){
+    //         float SAD = 0;     
+    //         for (int i = idx - window_size / 2; i <= idx + window_size / 2; ++i) {
+    //             SAD += abs(values[i] - query[i - idx + window_size / 2]);
+    //         }
+    //         SADs[query_idx][idx] = SAD / window_size;
+    //     }
+    // }
 
+    // Save data
+    #pragma omp parallel for
+    for(int query_idx = 0; query_idx < filters.size(); query_idx++){
+        const vector<float> query = filters[query_idx];
+
+        string file_name = "../output_data/SAD"+ to_string(query_idx) + "_filterlen" + to_string(query.size()) +".txt";
+        ofstream output_file(file_name);
+        if (output_file.is_open()) {
+            for (float value : SADs[query_idx]) {
+                output_file << std::fixed << std::setprecision(5) << value << "\n";
+            }
+            output_file.close();
+            cout << "Saved successfully: " << file_name << endl;
+        } else {
+            cerr << "Failed to open: " << file_name << endl;
+        }
+    }
 
     map<int, vector<float>> means, stds; // int is the filter length, vector<float> the mean or std value
     map<int, pair<float, float>> filters_stats; // int is the filter idx, pair<float, float> first is mean, second is std
@@ -99,7 +132,7 @@ int main() {
             filters_stats[query_idx].second = sqrt(variance_summation / (window_size - 1));
         }
 
-        #pragma barrier
+        #pragma omp barrier
     
         // Calculate znccs for all filters
         #pragma omp for
@@ -112,7 +145,7 @@ int main() {
             calculate_znccs_windowed(values, means, stds, znccs, query, filters_stats[query_idx].first, filters_stats[query_idx].second, window_size, SERIES_LENGTH);
         }
 
-        #pragma barrier
+        #pragma omp barrier
 
         // Save data
         #pragma omp for
