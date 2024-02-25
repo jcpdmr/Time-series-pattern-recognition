@@ -10,6 +10,7 @@
                 "g++",
                 "-m64",
                 "-g",
+                "--use_fast_math",
                 "-G",
                 "-o",
                 "${workspaceFolder}/build/Time-series-pattern-recognition",
