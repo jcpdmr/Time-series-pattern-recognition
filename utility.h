@@ -14,7 +14,7 @@
 #include <chrono>
 #include <map>
 
-#define SERIES_LENGTH 525600
+#define SERIES_LENGTH 2075260
 
 using namespace std;
 
