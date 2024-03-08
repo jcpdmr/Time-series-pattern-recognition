@@ -7,7 +7,6 @@
                 "/usr/local/cuda/include"
             ],
             "defines": [],
-            "compilerPath": "/usr/local/cuda-11.8/bin/nvcc",
             "intelliSenseMode": "clang-x64"
         }
     ],
