@@ -1,0 +1,26 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64",
+            "configurationProvider": "ms-vscode.cmake-tools"
+        },
+        {
+            "name": "CUDA",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/local/cuda/include"
+            ],
+            "defines": [],
+            "intelliSenseMode": "clang-x64"
+        }
+    ],
+    "version": 4
+}

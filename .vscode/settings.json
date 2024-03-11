@@ -48,6 +48,16 @@
         "fstream": "cpp",
         "ctime": "cpp",
         "iomanip": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "cstring": "cpp",
+        "complex": "cpp",
+        "map": "cpp",
+        "set": "cpp",
+        "ratio": "cpp",
+        "semaphore": "cpp",
+        "stop_token": "cpp",
+        "thread": "cpp",
+        "cfenv": "cpp",
+        "cinttypes": "cpp"
     }
 }

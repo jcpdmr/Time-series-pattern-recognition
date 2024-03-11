@@ -1,8 +1,11 @@
 #include "utility.h"
+// TODO: performance CPU all'aumento dei threads non buone ---> dataset più grande
 
 int main() {
+    string flt_type = "SAD";  // "SAD" or "ZMNCC"
+
     // Open the file
-    ifstream file("../input_data/household_power_consumption.txt");
+    ifstream file("../input_data/input.txt");
     if (!file.is_open()) {
         cerr << "Error opening the file!" << endl;
         return 1;
@@ -42,159 +45,175 @@ int main() {
     // Remeber to close the file
     file.close();
 
-    vector<vector<float>> temp_filter;
-    temp_filter.push_back(create_filter_trend_n_weeks(1, true));
-    temp_filter.push_back(create_filter_trend_n_weeks(1, true));
-    temp_filter.push_back(create_filter_trend_n_weeks(1, true));
-    temp_filter.push_back(create_filter_trend_n_weeks(1, true));
-    temp_filter.push_back(create_filter_trend_n_weeks(1, true));
-    temp_filter.push_back(create_filter_trend_n_weeks(1, true));
-    temp_filter.push_back(create_filter_trend_n_weeks(1, true));
-    temp_filter.push_back(create_filter_trend_n_weeks(1, true));
-    // temp_filter.push_back(create_filter_trend_n_weeks(4, true));
-    // temp_filter.push_back(create_filter_trend_n_weeks(8, true));
-
-    // temp_filter.push_back(create_filter_trend_n_weeks(1, false));
-    // temp_filter.push_back(create_filter_trend_n_weeks(4, false));
-    // temp_filter.push_back(create_filter_trend_n_weeks(8, false));
-
-    // temp_filter.push_back(create_filter_cycle_n_weeks(4, true));
-    // temp_filter.push_back(create_filter_cycle_n_weeks(8, true));
-
-
-    // temp_filter.push_back(create_filter_cycle_n_weeks(4, false));
-    // temp_filter.push_back(create_filter_cycle_n_weeks(8, false));
-
-    // temp_filter.push_back(create_filter_trend_n_weeks(1, true));
-    // temp_filter.push_back(create_filter_trend_n_weeks(4, true));
-    // temp_filter.push_back(create_filter_trend_n_weeks(8, true));
-
-    // temp_filter.push_back(create_filter_trend_n_weeks(1, false));
-    // temp_filter.push_back(create_filter_trend_n_weeks(4, false));
-    // temp_filter.push_back(create_filter_trend_n_weeks(8, false));
-
-    // temp_filter.push_back(create_filter_cycle_n_weeks(4, true));
-    // temp_filter.push_back(create_filter_cycle_n_weeks(8, true));
-
-
-    // temp_filter.push_back(create_filter_cycle_n_weeks(4, false));
-    // temp_filter.push_back(create_filter_cycle_n_weeks(8, false));
-
-
     // Create a bank of filters
-    const vector<vector<float>> filters = temp_filter;
+    vector<float> temp_filters;
+    vector<float> tmp = create_filter_trend_n_weeks(1, true);
 
-    cout << "Executing benchmark..." << endl;
-    auto start_benchmark = chrono::high_resolution_clock::now();
+    for(int i = 0; i < N_FILTERS; i++){
+        temp_filters.insert(temp_filters.end(), tmp.begin(), tmp.end());
+    }
+    vector<float> filters = temp_filters;
 
-    vector<vector<float>> SADs(filters.size());
-    
-    for (int query_idx = 0; query_idx < filters.size(); query_idx++){
-        const vector<float> query = filters[query_idx];
-        const int window_size = query.size();
-        SADs[query_idx] = vector<float>(SERIES_LENGTH, 0.0f);
-        #pragma omp parallel for
-        for(int idx = window_size / 2; idx < SERIES_LENGTH - window_size / 2; idx++){
-            float SAD = 0;     
-            for (int i = idx - window_size / 2; i <= idx + window_size / 2; ++i) {
-                SAD += abs(values[i] - query[i - idx + window_size / 2]);
+    // Execute benchmark with different number of threads
+    for(int n_threads = 64; n_threads <= 64; n_threads += 8){
+        omp_set_num_threads(n_threads);
+        
+        // Execute multiple test with same number of threads   
+        for(int n_test = 0; n_test < 3; n_test++){
+            
+            cout << "Executing benchmark..." << endl;
+
+            if(flt_type == "SAD"){
+                auto start_benchmark = chrono::high_resolution_clock::now();
+
+                // Create space for the results
+                vector<float> SADs(N_FILTERS * SERIES_LENGTH, 0.0f);
+
+                #pragma omp parallel for
+                for(int central_idx = FILTER_LENGTH / 2; central_idx < SERIES_LENGTH - FILTER_LENGTH; central_idx++){
+                    int start_window_idx = central_idx - FILTER_LENGTH / 2;
+                    // Create space for temporary values
+                    vector<float> SAD(N_FILTERS, 0.0f);
+
+                    //Compute (multiple) SAD for this idx applying (multiple) filter 
+                    for (int i = 0; i <= FILTER_LENGTH; ++i) {
+                        const float current_value = values[start_window_idx + i];
+                        for(int filter_idx = 0; filter_idx < N_FILTERS; filter_idx++){
+                            // Save result in temporary memory
+                            SAD[filter_idx] += abs(current_value - filters[i + filter_idx * FILTER_LENGTH]);
+                        }
+                    }
+                    // Copy results in final memory
+                    for(int filter_idx = 0; filter_idx < N_FILTERS; filter_idx++){
+                        SADs[central_idx + filter_idx * SERIES_LENGTH] = SAD[filter_idx] / FILTER_LENGTH;
+                    }
+                }
+
+                auto stop_benchmark = chrono::high_resolution_clock::now();
+                auto duration_benchmark = chrono::duration_cast<chrono::milliseconds >(stop_benchmark - start_benchmark).count();
+                
+                cout << "Benchmark elapsed time: " << duration_benchmark << " ms" << endl;
+
+                // Save data
+                #pragma omp parallel for
+                for(int filter_idx = 0; filter_idx < N_FILTERS; filter_idx++){
+                    string file_name = "../output_data/SAD"+ to_string(filter_idx) + "_filterlen" + to_string(FILTER_LENGTH) + ".txt";
+                    ofstream output_file(file_name);
+                    if (output_file.is_open()) {
+                        for (int i = 0; i < SERIES_LENGTH; i++){
+                            output_file << SADs[filter_idx * SERIES_LENGTH + i] << "\n";
+                        }
+                        output_file.close();
+                        cout << "Saved successfully: " << file_name << endl;
+                    } else {
+                        cerr << "Failed to open: " << file_name << endl;
+                    }
+                }
+
+                // Write benchmark result to a file
+                string out = "../output_data/benchmark_results.txt";
+                std::ofstream f(out, std::ios::app);
+                if(f.is_open()) {
+                    std::time_t currentTime = std::time(nullptr);
+
+                    // Format data and time in a string
+                    char buffer[80];
+                    std::strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", std::localtime(&currentTime));
+
+                    f << "[" << buffer << "] Series length: " << SERIES_LENGTH << "   Filter length: " << FILTER_LENGTH << "   Filter type: "<< flt_type << "   Elapsed: " << duration_benchmark << " ms"  << "   N threads: " << n_threads << endl;
+                    
+                    std::cout << "Data saved successfully" << std::endl;
+                }
+                else {
+                    std::cerr << "Unable to open the file" << std::endl;
+                    exit(-1);
+                }
+
             }
-            SADs[query_idx][idx] = SAD / window_size;
+            
+            if(flt_type == "ZMNCC"){
+
+                // Allocate CPU memory for the results
+                vector<float> means(SERIES_LENGTH, 0.0f);
+                vector<float> stds(SERIES_LENGTH, 0.0f);
+                vector<float> zmnccs(N_FILTERS * SERIES_LENGTH, 0.0f);
+                vector<float> filt_means(N_FILTERS, 0.0f);
+                vector<float> filt_stds(N_FILTERS, 0.0f);
+
+                // Calculate mean and std of filters
+                #pragma omp parallel for
+                for (int filter_idx = 0; filter_idx < N_FILTERS; filter_idx++){
+                    const int window_size = FILTER_LENGTH;
+                    float filt_mean, filt_std;
+
+                    float sum = 0.0f;
+                    for (int i = 0; i <= window_size; ++i) {
+                        sum += filters[i + filter_idx * FILTER_LENGTH];
+                    }
+                    filt_mean = sum / window_size;
+
+                    float variance_summation = 0.0f;
+                    for (int i = 0; i < window_size; ++i) {
+                        variance_summation += pow(filters[i + filter_idx * FILTER_LENGTH] - filt_mean, 2);
+                    }
+                    filt_std = sqrt(variance_summation / (window_size - 1));
+                    
+                    // Save the mean and std of filter
+                    filt_means[filter_idx] = filt_mean;
+                    filt_stds[filter_idx] = filt_std;
+                }
+                cout << "Finished computing means and stds of filters" << endl;
+
+                auto start_benchmark = chrono::high_resolution_clock::now();
+
+                // Parallel execution
+                calculate_means_windowed(values, means, FILTER_LENGTH, SERIES_LENGTH);
+                
+                // Parallel execution
+                calculate_stds_zmnccs_windowed(values, means, stds, zmnccs, filters, filt_means, filt_stds, FILTER_LENGTH, SERIES_LENGTH);
+
+                auto stop_benchmark = chrono::high_resolution_clock::now();
+                auto duration_benchmark = chrono::duration_cast<chrono::milliseconds >(stop_benchmark - start_benchmark).count();     
+                
+                cout << "Benchmark elapsed time: " << duration_benchmark << " ms" << endl;
+                
+                // Save data
+                #pragma omp parallel for
+                for(int filter_idx = 0; filter_idx < N_FILTERS; filter_idx++){
+                    string file_name = "../output_data/zmncc"+ to_string(filter_idx) + "_filterlen" + to_string(FILTER_LENGTH) +".txt";
+                    ofstream output_file(file_name);
+                    if (output_file.is_open()) {
+                        for (int i = 0; i < SERIES_LENGTH; i++){
+                            output_file << zmnccs[filter_idx * SERIES_LENGTH + i] << "\n";
+                        }
+                        output_file.close();
+                        cout << "Saved successfully: " << file_name << endl;
+                    } else {
+                        cerr << "Failed to open: " << file_name << endl;
+                    }
+                }
+
+                // Write benchmark result to a file
+                string out = "../output_data/benchmark_results.txt";
+                std::ofstream f(out, std::ios::app);
+                if(f.is_open()) {
+                    std::time_t currentTime = std::time(nullptr);
+
+                    // Format data and time in a string
+                    char buffer[80];
+                    std::strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", std::localtime(&currentTime));
+
+                    f << "[" << buffer << "] Series length: " << SERIES_LENGTH << "   Filter length: " << FILTER_LENGTH << "   Filter type: "<< flt_type << "   Elapsed: " << duration_benchmark << " ms" << "   N threads: " << n_threads  << endl;
+                    
+                    std::cout << "Data saved successfully" << std::endl;
+                }
+                else {
+                    std::cerr << "Unable to open the file" << std::endl;
+                    exit(-1);
+                }
+            }    
         }
     }
-
-    auto stop_benchmark = chrono::high_resolution_clock::now();
-    auto duration_benchmark = chrono::duration_cast<chrono::milliseconds >(stop_benchmark - start_benchmark).count();
-    
-    cout << "Benchmark elapsed time: " << duration_benchmark << " ms" << endl;
-
-    // Save data
-    #pragma omp parallel for
-    for(int query_idx = 0; query_idx < filters.size(); query_idx++){
-        const vector<float> query = filters[query_idx];
-
-        string file_name = "../output_data/SAD"+ to_string(query_idx) + "_filterlen" + to_string(query.size()) +".txt";
-        ofstream output_file(file_name);
-        if (output_file.is_open()) {
-            for (float value : SADs[query_idx]) {
-                output_file << std::fixed << std::setprecision(5) << value << "\n";
-            }
-            output_file.close();
-            cout << "Saved successfully: " << file_name << endl;
-        } else {
-            cerr << "Failed to open: " << file_name << endl;
-        }
-    }
-
-    // map<int, vector<float>> means, stds; // int is the filter length, vector<float> the mean or std value
-    // map<int, pair<float, float>> filters_stats; // int is the filter idx, pair<float, float> first is mean, second is std
-    // map<int, vector<float>> znccs;
-
-    // #pragma omp parallel
-    // {
-        
-    //     // Pre-compute all means and stds for the time series data using window size of all filters, also
-    //     // pre-compute the mean and std of all filter
-    //     #pragma omp for
-    //     for (int query_idx = 0; query_idx < filters.size(); query_idx++){
-    //         const vector<float> query = filters[query_idx];
-    //         const int window_size = query.size();
-
-    //         means[window_size] = vector<float>(SERIES_LENGTH, 0.0f);
-    //         calculate_means_windowed(values, means, window_size, SERIES_LENGTH);
-
-    //         stds[window_size] = vector<float>(SERIES_LENGTH, 0.0f);
-    //         calculate_stds_windowed(values, means, stds, window_size, SERIES_LENGTH);
-
-    //         float sum = 0.0f;
-    //         for (int i = 0; i <= window_size; ++i) {
-    //             sum += query[i];
-    //         }
-    //         filters_stats[query_idx].first = sum / window_size;
-
-    //         float variance_summation = 0.0f;
-    //         for (int i = 0; i < window_size; ++i) {
-    //             variance_summation += pow(query[i] - (filters_stats[query_idx].first), 2);
-    //         }
-    //         filters_stats[query_idx].second = sqrt(variance_summation / (window_size - 1));
-    //     }
-
-    //     #pragma omp barrier
-    
-    //     // Calculate znccs for all filters
-    //     #pragma omp for
-    //     for (int query_idx = 0; query_idx < filters.size(); query_idx++){
-
-    //         const vector<float> query = filters[query_idx];
-    //         const int window_size = query.size();
-
-    //         znccs[window_size] = vector<float>(SERIES_LENGTH, 0.0f); 
-    //         calculate_znccs_windowed(values, means, stds, znccs, query, filters_stats[query_idx].first, filters_stats[query_idx].second, window_size, SERIES_LENGTH);
-    //     }
-
-    //     #pragma omp barrier
-
-    //     // Save data
-    //     #pragma omp for
-    //     for(int query_idx = 0; query_idx < filters.size(); query_idx++){
-    //         const vector<float> query = filters[query_idx];
-    //         const int window_size = query.size();
-
-    //         string file_name = "../output_data/zn_cross_correlation"+ to_string(query_idx) + "_filterlen" + to_string(query.size()) +".txt";
-    //         ofstream output_file(file_name);
-    //         if (output_file.is_open()) {
-    //             for (float value : znccs[window_size]) {
-    //                 output_file << value << "\n";
-    //             }
-    //             output_file.close();
-    //             cout << "Saved successfully: " << file_name << endl;
-    //         } else {
-    //             cerr << "Failed to open: " << file_name << endl;
-    //         }
-    //     }
-        
-    // }
-
 
     return 0;
 }

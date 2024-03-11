@@ -7,6 +7,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(CMAKE_CXX_FLAGS "-O3 -Wall -Wextra")
 
-add_executable(Time-series-pattern-recognition main.cpp utility.h utility.cpp)
+add_executable(Time-series-pattern-recognition main.cpp utility.h)
 
 target_link_libraries(Time-series-pattern-recognition PUBLIC OpenMP::OpenMP_CXX)
