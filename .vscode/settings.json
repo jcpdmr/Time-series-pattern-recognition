@@ -1,7 +1,0 @@
-{
-    "C_Cpp.default.compilerPath": "/usr/local/cuda-11.8/bin/nvcc",
-    "files.associations": {
-        "fstream": "cpp",
-        "cmath": "cpp"
-    }
-}
