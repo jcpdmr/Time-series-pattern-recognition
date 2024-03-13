@@ -65,8 +65,7 @@ void calculate_stds_zmnccs_windowed(const vector<float>& values, const vector<fl
     }
 };
 
-
-
+// Create a filter of floats with lenght len. The values of filter are randomly generated
 vector<float> create_filter(const int len){
     vector<float>filt;
     filt.reserve(len);

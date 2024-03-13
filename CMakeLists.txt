@@ -13,15 +13,15 @@ target_link_libraries(OpenMP-Time-series-pattern-recognition PUBLIC OpenMP::Open
 
 set(CMAKE_CXX_FLAGS "-O3 -Wall -Wextra")
 
-# # CUDA
-# add_executable(CUDA-Time-series-pattern-recognition main.cu utility.h utility.h)
+# CUDA
+add_executable(CUDA-Time-series-pattern-recognition main.cu utility.h utility.h)
 
-# # Set include directories for CUDA
-# target_include_directories(CUDA-Time-series-pattern-recognition PRIVATE ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+# Set include directories for CUDA
+target_include_directories(CUDA-Time-series-pattern-recognition PRIVATE ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
 
-# # Set compiler options for CUDA
-# target_compile_options(CUDA-Time-series-pattern-recognition PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
+# Set compiler options for CUDA
+target_compile_options(CUDA-Time-series-pattern-recognition PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:--expt-relaxed-constexpr>)
 
-# # Set NVCC flags
-# set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --use_fast_math")
+# Set NVCC flags
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --use_fast_math")
 
