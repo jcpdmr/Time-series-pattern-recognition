@@ -1,8 +1,15 @@
 #include "utility.h"
-// TODO: performance CPU all'aumento dei threads non buone ---> dataset più grande
 
 int main() {
-    string flt_type = "SAD";  // "SAD" or "ZMNCC"
+    string flt_type = "ZMNCC";  // "SAD" or "ZMNCC"
+
+    // Check if output folder exists and if not it creates the folder
+    string output_folder = "../output_data";
+    if (!fs::exists(output_folder)) {
+        // Crea la cartella
+        fs::create_directory(output_folder);
+        std::cout << "Folder " << output_folder << " created\n";
+    }
 
     // Open the file
     ifstream file("../input_data/input.txt");

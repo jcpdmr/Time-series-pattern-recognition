@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Build and debug",
+            "name": "Build and debug C++",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/Time-series-pattern-recognition",
@@ -20,6 +20,14 @@
                 }
             ],
             "preLaunchTask": "build"
-        }
+        },
+        {
+            "name": "Build and Debug",
+            "type": "cuda-gdb",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/CUDA-Time-series-pattern-recognition",
+            "cwd": "${workspaceFolder}/build",
+            "preLaunchTask": "Build CUDA Application"
+        },
     ]
 }

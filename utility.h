@@ -12,14 +12,16 @@
 #include <iomanip>
 #include <cmath>
 #include <chrono>
-#include <map>
+#include <filesystem>
+#include <random>
 
-// #define SERIES_LENGTH 2075260 * 3 // For ZMNCC benchmark
-#define SERIES_LENGTH 2075260 * 2  // For SAD benchmark
+#define SERIES_LENGTH 2075260 * 3 // For ZMNCC benchmark
+// #define SERIES_LENGTH 2075260 * 10  // For SAD benchmark
 #define N_FILTERS 8
 #define FILTER_LENGTH 12032
 
 using namespace std;
+namespace fs = std::filesystem;
 
 void calculate_means_windowed(const vector<float>& values, vector<float>& means, const int window_size, const int series_length){
     #pragma omp parallel for
@@ -65,7 +67,21 @@ void calculate_stds_zmnccs_windowed(const vector<float>& values, const vector<fl
 
 
 
-// Create a trend filter for n weeks, uptrend true if filter is and uptrend, false if downtrend
+vector<float> create_filter(const int len){
+    vector<float>filt;
+    filt.reserve(len);
+
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_int_distribution<> distribution(1,1000);
+    for(int i = 0; i < len; i++){
+        int rnd_num = distribution(gen);
+        filt.push_back(rnd_num);
+    }
+
+    return filt;
+}
+
 vector<float> create_filter_trend_n_weeks(const int n_of_weeks, bool uptrend=true){
     vector<float>filt;
     filt.reserve(n_of_weeks * 1440 * 7);
@@ -87,8 +103,7 @@ vector<float> create_filter_trend_n_weeks(const int n_of_weeks, bool uptrend=tru
     return filt;
 }
 
-// Create a cycle filter for n weeks, up_then_down true if first half of weeks uptrend an other half downtrend, false if 
-// first half of weeks downtrend an other half uptrend
+
 vector<float> create_filter_cycle_n_weeks(const int n_of_weeks, bool up_then_down){
 
     if((n_of_weeks % 2) != 0){
