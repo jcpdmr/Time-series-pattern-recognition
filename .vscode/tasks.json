@@ -1,0 +1,46 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build CUDA Application",
+            "type": "shell",
+            "command": "/usr/local/cuda/bin/nvcc",
+            "args": [
+                "-ccbin",
+                "g++",
+                "-m64",
+                "-g",
+                "--use_fast_math",
+                "-G",
+                "-o",
+                "${workspaceFolder}/build/Time-series-pattern-recognition",
+                "${workspaceFolder}/main.cu"
+            ],
+            "group": {
+                "kind": "build",
+            }
+        },
+        {
+            "label": "Run CUDA Application",
+            "type": "shell",
+            "command": "${workspaceFolder}/build/Time-series-pattern-recognition",
+            "group": {
+                "kind": "build"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}/build"
+            }
+        },
+        {
+            "label": "Build and Run CUDA Application",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "Build CUDA Application",
+                "Run CUDA Application"
+            ],
+            "group": {
+                "kind": "build"
+            }
+        },
+    ]
+}

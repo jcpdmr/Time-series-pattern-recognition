@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "name": "CUDA",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/local/cuda/include"
+            ],
+            "defines": [],
+            "intelliSenseMode": "clang-x64"
+        }
+    ],
+    "version": 4
+}

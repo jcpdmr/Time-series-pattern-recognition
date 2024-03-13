@@ -22,3 +22,5 @@ set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --use_fast_math")
 
 # Enable OpenMP
 target_link_libraries(Time-series-pattern-recognition PUBLIC OpenMP::OpenMP_CXX)
+
+set(CMAKE_CXX_FLAGS "-O3 -Wall -Wextra")
