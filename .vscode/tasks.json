@@ -3,12 +3,19 @@
     "tasks": [
         // C++
         {
-            "label": "build",
+            "label": "Build CUDA Application",
             "type": "shell",
-            "command": "cmake",
+            "command": "/usr/local/cuda/bin/nvcc",
             "args": [
-                "--build",
-                "${workspaceFolder}/build"
+                "-ccbin",
+                "g++",
+                "-m64",
+                "-g",
+                "--use_fast_math",
+                "-G",
+                "-o",
+                "${workspaceFolder}/build/Time-series-pattern-recognition",
+                "${workspaceFolder}/main.cu"
             ],
             "group": {
                 "kind": "build"

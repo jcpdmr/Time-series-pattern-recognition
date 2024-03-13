@@ -6,8 +6,6 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/Time-series-pattern-recognition",
-            "args": [],
-            "stopAtEntry": false,
             "cwd": "${workspaceFolder}/build",
             "environment": [],
             "externalConsole": false,
