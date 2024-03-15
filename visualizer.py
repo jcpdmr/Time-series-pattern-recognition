@@ -7,16 +7,16 @@ plt.rcParams.update({'font.size': 16})
 
 N_TEST = 3
 
-def extract_data_avg(query_data: list[tuple], n_test=N_TEST):
-    dict_query_data = {}
-    for data in query_data:
-        if data[0] not in dict_query_data.keys():
-            dict_query_data[data[0]] = data[3]
+def extract_data_avg(data: list[tuple], n_test=N_TEST):
+    dict_query_64_data = {}
+    for data in data:
+        if data[0] not in dict_query_64_data.keys():
+            dict_query_64_data[data[0]] = data[3]
         else:
-            dict_query_data[data[0]] += data[3]
-    for key in dict_query_data:
-        dict_query_data[key] /= n_test
-    return dict_query_data
+            dict_query_64_data[data[0]] += data[3]
+    for key in dict_query_64_data:
+        dict_query_64_data[key] /= n_test
+    return dict_query_64_data
 
 def custom_sort(string):
     # Extract the number from the string using regular expressions
@@ -49,7 +49,7 @@ for file_name in files:
                 if file_name == "benchmark_results_CUDA.txt":
 
                     # Benchmark CUDA data idxs:  0                      1                                    2                                   3          4: N threads = 0
-                    pattern = r"Series length: (\d+)   Filter length: (\d+)   Filter type: \b(ZMNCC_CUDA|SAD_CUDA|ZMNCC_CUDA_SHARED)   Elapsed: (\d+) ms"
+                    pattern = r"Series length: (\d+)   Filter length: (\d+)   Filter type: \b(ZMNCC_CUDA_NO|SAD_CUDA|ZMNCC_CUDA_SHARED)   Elapsed: (\d+) ms"
                     match = re.search(pattern=pattern, string=line)
                     if match:
                         benchmark_CUDA_data.append(( int(match.group(1)), int(match.group(2)), match.group(3), int(match.group(4)), 0 ))
@@ -64,12 +64,12 @@ for file_name in files:
 # Graph 1
 fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 10))
 
-query_data = [data for data in benchmark_data if data[1] == 12032 and data[2] == "SAD" and data[4] == 64]
+query_64_data = [data for data in benchmark_data if data[1] == 12032 and data[2] == "SAD" and data[4] == 64]
 query_CUDA_data = [data for data in benchmark_CUDA_data if data[1] == 12032 and data[2] == "SAD_CUDA"]
-dict_query_data = extract_data_avg(query_data=query_data)
-dict_query_CUDA_data = extract_data_avg(query_data=query_CUDA_data)
+dict_query_64_data = extract_data_avg(data=query_64_data)
+dict_query_CUDA_data = extract_data_avg(data=query_CUDA_data)
 
-ax.plot(dict_query_data.keys(), dict_query_data.values(), label="OpenMP (64 threads)", marker=".", markersize=12)
+ax.plot(dict_query_64_data.keys(), dict_query_64_data.values(), label="OpenMP (64 threads)", marker=".", markersize=12)
 ax.plot(dict_query_CUDA_data.keys(), dict_query_CUDA_data.values(), label="CUDA", marker=".", markersize=12)
 ax.set_ylabel('ms')
 ax.set_xlabel('Series length')
@@ -81,12 +81,12 @@ plt.savefig(os.path.join(output_visualizer_folder, "SAD_length"))
 # Graph 2
 fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 10))
 
-query_data = [data for data in benchmark_data if data[0] == 20752600 and data[1] == 12032 and data[2] == "SAD" and data[4] == 64]
+query_64_data = [data for data in benchmark_data if data[0] == 20752600 and data[1] == 12032 and data[2] == "SAD" and data[4] == 64]
 query_CUDA_data = [data for data in benchmark_CUDA_data if data[0] == 20752600 and data[1] == 12032 and data[2] == "SAD_CUDA"]
-dict_query_data = extract_data_avg(query_data=query_data)
-dict_query_CUDA_data = extract_data_avg(query_data=query_CUDA_data)
+dict_query_64_data = extract_data_avg(data=query_64_data)
+dict_query_CUDA_data = extract_data_avg(data=query_CUDA_data)
 
-ax.bar(0, dict_query_data.values(), label="OpenMP (64 threads)")
+ax.bar(0, dict_query_64_data.values(), label="OpenMP (64 threads)")
 ax.bar(1, dict_query_CUDA_data.values(), label="CUDA")
 ax.set_ylabel('ms')
 ax.set_xlabel('Lower is better')
@@ -99,16 +99,22 @@ plt.savefig(os.path.join(output_visualizer_folder, "SADvs"))
 # Graph 3
 fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 10))
 
-query_data = [data for data in benchmark_data if data[1] == 12032 and data[2] == "ZMNCC" and data[4] == 64]
-query_CUDA_data = [data for data in benchmark_CUDA_data if data[1] == 12032 and data[2] == "ZMNCC_CUDA"]
+query_64_data = [data for data in benchmark_data if data[1] == 12032 and data[2] == "ZMNCC" and data[4] == 64]
+query_32_data = [data for data in benchmark_data if data[1] == 12032 and data[2] == "ZMNCC" and data[4] == 32]
+query_16_data = [data for data in benchmark_data if data[1] == 12032 and data[2] == "ZMNCC" and data[4] == 16]
+query_CUDA_data = [data for data in benchmark_CUDA_data if data[1] == 12032 and data[2] == "ZMNCC_CUDA_NO"]
 query_CUDA_SH_data = [data for data in benchmark_CUDA_data if data[1] == 12032 and data[2] == "ZMNCC_CUDA_SHARED"]
-dict_query_data = extract_data_avg(query_data=query_data)
-dict_query_CUDA_data = extract_data_avg(query_data=query_CUDA_data)
-dict_query_CUDA_SH_data = extract_data_avg(query_data=query_CUDA_SH_data)
+dict_query_64_data = extract_data_avg(data=query_64_data)
+dict_query_32_data = extract_data_avg(data=query_32_data)
+dict_query_16_data = extract_data_avg(data=query_16_data)
+dict_query_CUDA_data = extract_data_avg(data=query_CUDA_data)
+dict_query_CUDA_SH_data = extract_data_avg(data=query_CUDA_SH_data)
 
-ax.plot(dict_query_data.keys(), dict_query_data.values(), label="OpenMP (64 threads)", marker=".", markersize=12)
+ax.plot(dict_query_64_data.keys(), dict_query_64_data.values(), label="OpenMP (64 threads)", marker=".", markersize=12)
+ax.plot(dict_query_32_data.keys(), dict_query_32_data.values(), label="OpenMP (32 threads)", marker=".", markersize=12)
+ax.plot(dict_query_16_data.keys(), dict_query_16_data.values(), label="OpenMP (16 threads)", marker=".", markersize=12)
 ax.plot(dict_query_CUDA_data.keys(), dict_query_CUDA_data.values(), label="CUDA", marker=".", markersize=12)
-ax.plot(dict_query_CUDA_SH_data.keys(), dict_query_CUDA_SH_data.values(), label="CUDA", marker=".", markersize=12)
+ax.plot(dict_query_CUDA_SH_data.keys(), dict_query_CUDA_SH_data.values(), label="CUDA shared mem", marker=".", markersize=12)
 ax.set_ylabel('ms')
 ax.set_xlabel('Series length')
 ax.set_title("ZMNCC performance")
@@ -119,16 +125,22 @@ plt.savefig(os.path.join(output_visualizer_folder, "ZMNCC_length"))
 # Graph 4
 fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 10))
 
-query_data = [data for data in benchmark_data if data[0] == 6225780 and data[1] == 12032 and data[2] == "ZMNCC" and data[4] == 64]
-query_CUDA_data = [data for data in benchmark_CUDA_data if data[0] == 6225780 and data[1] == 12032 and data[2] == "ZMNCC_CUDA"]
+query_64_data = [data for data in benchmark_data if data[0] == 6225780 and data[1] == 12032 and data[2] == "ZMNCC" and data[4] == 64]
+query_32_data = [data for data in benchmark_data if data[1] == 12032 and data[2] == "ZMNCC" and data[4] == 32]
+query_16_data = [data for data in benchmark_data if data[1] == 12032 and data[2] == "ZMNCC" and data[4] == 16]
+query_CUDA_data = [data for data in benchmark_CUDA_data if data[0] == 6225780 and data[1] == 12032 and data[2] == "ZMNCC_CUDA_NO"]
 query_CUDA_SH_data = [data for data in benchmark_CUDA_data if data[0] == 6225780 and data[1] == 12032 and data[2] == "ZMNCC_CUDA_SHARED"]
-dict_query_data = extract_data_avg(query_data=query_data)
-dict_query_CUDA_data = extract_data_avg(query_data=query_CUDA_data)
-dict_query_CUDA_SH_data = extract_data_avg(query_data=query_CUDA_SH_data)
+dict_query_64_data = extract_data_avg(data=query_64_data)
+dict_query_32_data = extract_data_avg(data=query_32_data)
+dict_query_16_data = extract_data_avg(data=query_16_data)
+dict_query_CUDA_data = extract_data_avg(data=query_CUDA_data)
+dict_query_CUDA_SH_data = extract_data_avg(data=query_CUDA_SH_data)
 
-ax.bar(0, dict_query_data.values(), label="OpenMP (64 threads)")
-ax.bar(1, dict_query_CUDA_data.values(), label="CUDA")
-ax.bar(2, dict_query_CUDA_SH_data.values(), label="CUDA shared mem")
+ax.bar(0, dict_query_64_data.values(), label="OpenMP (64 threads)")
+ax.bar(1, dict_query_32_data.values(), label="OpenMP (32 threads)")
+ax.bar(2, dict_query_16_data.values(), label="OpenMP (16 threads)")
+ax.bar(3, dict_query_CUDA_data.values(), label="CUDA")
+ax.bar(4, dict_query_CUDA_SH_data.values(), label="CUDA shared mem")
 ax.set_ylabel('ms')
 ax.set_xlabel('Lower is better')
 ax.set_title("ZMNCC performance")

@@ -81,7 +81,7 @@ __global__ void calculate_stds_zmnccs_windowed(const float* values, const float*
 }
 
 __global__ void calculate_stds_zmnccs_windowed_shared(const float* values, const float* means, float* stds, float* zmnccs, float* filters, float* filter_means, float* filter_stds, const int window_size, const int series_length, const int values_to_load_per_thread, const int threads_for_loading) {
-    __shared__ float tile_shared[256 * 48];
+    extern __shared__ float tile_shared[];
 
     const int start_window_idx = blockIdx.x * blockDim.x + threadIdx.x; // The real thread idx
     const int central_idx = start_window_idx + (window_size / 2); // Index of the central value of window

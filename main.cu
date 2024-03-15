@@ -1,8 +1,13 @@
 #include "cuda_utility.h"
 
 int main() {
-    string flt_type = "ZMNCC_CUDA"; // "SAD_CUDA" or "ZMNCC_CUDA"
-    string shared = "SHARED"; // "SHARED": use shared memory
+    // Check if output folder exists and if not it creates the folder
+    string output_folder = "../output_data";
+    if (!fs::exists(output_folder)) {
+        // Crea la cartella
+        fs::create_directory(output_folder);
+        std::cout << "Folder " << output_folder << " created\n";
+    }
 
     // Open the file
     ifstream file("../input_data/input.txt");
@@ -59,7 +64,7 @@ int main() {
 
         cout << "Executing benchmark..." << endl;
     
-        if(flt_type == "SAD_CUDA"){
+        if(GPU_flt_type == "SAD_CUDA"){
             auto start_benchmark = chrono::high_resolution_clock::now();
 
             const int block_size = 256;
@@ -121,7 +126,7 @@ int main() {
                 char buffer[80];
                 std::strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", std::localtime(&currentTime));
 
-                f << "[" << buffer << "] Series length: " << SERIES_LENGTH << "   Filter length: " << FILTER_LENGTH << "   Filter type: "<< flt_type << "   Elapsed: " << duration_benchmark << " ms" << endl;
+                f << "[" << buffer << "] Series length: " << SERIES_LENGTH << "   Filter length: " << FILTER_LENGTH << "   Filter type: "<< GPU_flt_type << "   Elapsed: " << duration_benchmark << " ms" << endl;
                 
                 std::cout << "Data saved successfully" << std::endl;
             }
@@ -132,7 +137,7 @@ int main() {
 
 
         }
-        else if(flt_type == "ZMNCC_CUDA"){
+        else if(GPU_flt_type == "ZMNCC_CUDA"){
 
             // Allocate CPU memory for the results
             vector<float> means(SERIES_LENGTH, 0.0f);
@@ -195,8 +200,8 @@ int main() {
             // Wait for the kernel execution to finish to compute means
             checkCudaErrors(cudaDeviceSynchronize());
 
-            if(shared == "SHARED"){
-                calculate_stds_zmnccs_windowed_shared<<<n_blocks, block_size>>>(d_values, d_means, d_stds, d_zmnccs, d_filters, d_filt_means, d_filt_stds, FILTER_LENGTH, SERIES_LENGTH, values_to_load_per_thread, threads_for_loading);
+            if(GPU_use_shared_mem == "SHARED"){
+                calculate_stds_zmnccs_windowed_shared<<<n_blocks, block_size, (FILTER_LENGTH + block_size) * sizeof(float)>>>(d_values, d_means, d_stds, d_zmnccs, d_filters, d_filt_means, d_filt_stds, FILTER_LENGTH, SERIES_LENGTH, values_to_load_per_thread, threads_for_loading);
             }
             else{
                 calculate_stds_zmnccs_windowed<<<n_blocks, block_size>>>(d_values, d_means, d_stds, d_zmnccs, d_filters, d_filt_means, d_filt_stds, FILTER_LENGTH, SERIES_LENGTH);
@@ -247,7 +252,7 @@ int main() {
                 char buffer[80];
                 std::strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", std::localtime(&currentTime));
 
-                f << "[" << buffer << "] Series length: " << SERIES_LENGTH << "   Filter length: " << FILTER_LENGTH << "   Filter type: "<< flt_type + "_" + shared << "   Elapsed: " << duration_benchmark << " ms" << endl;
+                f << "[" << buffer << "] Series length: " << SERIES_LENGTH << "   Filter length: " << FILTER_LENGTH << "   Filter type: "<< GPU_flt_type + "_" + GPU_use_shared_mem << "   Elapsed: " << duration_benchmark << " ms" << endl;
                 
                 std::cout << "Data saved successfully" << std::endl;
             }
