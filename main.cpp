@@ -59,7 +59,7 @@ int main() {
     vector<float> filters = temp_filters;
 
     // Execute benchmark with different number of threads
-    for(int n_threads = 32; n_threads <= 32; n_threads += 8){
+    for(int n_threads = 64; n_threads <= 64; n_threads += 8){
         omp_set_num_threads(n_threads);
         
         // Execute multiple test with same number of threads   
@@ -124,7 +124,7 @@ int main() {
                     char buffer[80];
                     std::strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", std::localtime(&currentTime));
 
-                    f << "[" << buffer << "] Series length: " << SERIES_LENGTH << "   Filter length: " << FILTER_LENGTH << "   Filter type: "<< CPU_flt_type << "   Elapsed: " << duration_benchmark << " ms"  << "   N threads: " << n_threads << endl;
+                    f << buffer << "   Series length: " << SERIES_LENGTH << "   Filter length: " << FILTER_LENGTH << "   Filter type: "<< CPU_flt_type << "   Elapsed: " << duration_benchmark << " ms"  << "   N threads: " << n_threads << endl;
                     
                     std::cout << "Data saved successfully" << std::endl;
                 }
@@ -207,7 +207,7 @@ int main() {
                     char buffer[80];
                     std::strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", std::localtime(&currentTime));
 
-                    f << "[" << buffer << "] Series length: " << SERIES_LENGTH << "   Filter length: " << FILTER_LENGTH << "   Filter type: "<< CPU_flt_type << "   Elapsed: " << duration_benchmark << " ms" << "   N threads: " << n_threads  << endl;
+                    f << buffer << "   Series length: " << SERIES_LENGTH << "   Filter length: " << FILTER_LENGTH << "   Filter type: "<< CPU_flt_type << "   Elapsed: " << duration_benchmark << " ms" << "   N threads: " << n_threads  << endl;
                     
                     std::cout << "Data saved successfully" << std::endl;
                 }

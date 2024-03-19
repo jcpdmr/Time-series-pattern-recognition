@@ -117,7 +117,7 @@ int main() {
             }
 
             // Write benchmark result to a file
-            string out = "../output_data/benchmark_results_CUDA.txt";
+            string out = "../output_data/benchmark_results.txt";
             std::ofstream f(out, std::ios::app);
             if(f.is_open()) {
                 std::time_t currentTime = std::time(nullptr);
@@ -126,7 +126,7 @@ int main() {
                 char buffer[80];
                 std::strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", std::localtime(&currentTime));
 
-                f << "[" << buffer << "] Series length: " << SERIES_LENGTH << "   Filter length: " << FILTER_LENGTH << "   Filter type: "<< GPU_flt_type << "   Elapsed: " << duration_benchmark << " ms" << endl;
+                f << buffer << "   Series length: " << SERIES_LENGTH << "   Filter length: " << FILTER_LENGTH << "   Filter type: "<< GPU_flt_type << "   Elapsed: " << duration_benchmark << " ms" << endl;
                 
                 std::cout << "Data saved successfully" << std::endl;
             }
@@ -243,7 +243,7 @@ int main() {
             }
 
             // Write benchmark result to a file
-            string out = "../output_data/benchmark_results_CUDA.txt";
+            string out = "../output_data/benchmark_results.txt";
             std::ofstream f(out, std::ios::app);
             if(f.is_open()) {
                 std::time_t currentTime = std::time(nullptr);
@@ -252,7 +252,7 @@ int main() {
                 char buffer[80];
                 std::strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", std::localtime(&currentTime));
 
-                f << "[" << buffer << "] Series length: " << SERIES_LENGTH << "   Filter length: " << FILTER_LENGTH << "   Filter type: "<< GPU_flt_type + "_" + GPU_use_shared_mem << "   Elapsed: " << duration_benchmark << " ms" << endl;
+                f << buffer << "   Series length: " << SERIES_LENGTH << "   Filter length: " << FILTER_LENGTH << "   Filter type: "<< GPU_flt_type + "_" + GPU_use_shared_mem << "   Elapsed: " << duration_benchmark << " ms" << endl;
                 
                 std::cout << "Data saved successfully" << std::endl;
             }
