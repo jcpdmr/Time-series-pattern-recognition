@@ -86,66 +86,22 @@ vector<float> create_filter(const int len){
     return filt;
 }
 
-vector<float> create_filter_trend_n_weeks(const int n_of_weeks, bool uptrend=true){
+// Create a filter of floats with lenght len. The values of filter increase with step of 1 unit
+vector<float> create_filter_trend(const int len, bool uptrend=true){
     vector<float>filt;
-    filt.reserve(n_of_weeks * 1440 * 7);
+    filt.reserve(len);
     if(uptrend){
         float val = 1.0f;
-        for(int i = 0; i < n_of_weeks * 1440 * 7; i++){
+        for(int i = 0; i < len ; i++){
             filt.push_back(val);
             val++;
         }
     }
     else{
         float val = -1.0f;
-        for(int i = 0; i < n_of_weeks * 1440 * 7; i++){
+        for(int i = 0; i < len; i++){
             filt.push_back(val);
             val--;
-        }
-    }
-
-    return filt;
-}
-
-
-vector<float> create_filter_cycle_n_weeks(const int n_of_weeks, bool up_then_down){
-
-    if((n_of_weeks % 2) != 0){
-    cerr << "Number of weeks must be divisible by two" << endl;
-    // Return an empty vector to indicate the error
-    return vector<float>();
-    }
-
-    vector<float>filt;
-    filt.reserve(n_of_weeks * 1440 * 7);
-
-    int middle_point = (n_of_weeks / 2) * 1440 * 7;
-    if(up_then_down){
-        // Add the first half of upgoing values
-        float val = 1.0f;
-        for(int i = 0; i < middle_point; i++){
-            filt.push_back(val);
-            val++;
-        }
-        // Add the second half of downgoing values
-        val--;
-        for(int i = middle_point; i < n_of_weeks * 1440 * 7; i++){
-            filt.push_back(val);
-            val--;
-        }
-    }
-    else{
-        // Add the first half of upgoing values
-        float val = -1.0f;
-        for(int i = 0; i < middle_point; i++){
-            filt.push_back(val);
-            val--;
-        }
-        // Add the second half of downgoing values
-        val++;
-        for(int i = middle_point; i < n_of_weeks * 1440 * 7; i++){
-            filt.push_back(val);
-            val++;
         }
     }
 

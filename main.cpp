@@ -52,7 +52,7 @@ int main() {
 
     // Create a bank of filters
     vector<float> temp_filters;
-    vector<float> tmp = create_filter(FILTER_LENGTH);
+    vector<float> tmp = create_filter_trend(FILTER_LENGTH, true);
     for(int i = 0; i < N_FILTERS; i++){
         temp_filters.insert(temp_filters.end(), tmp.begin(), tmp.end());
     }
