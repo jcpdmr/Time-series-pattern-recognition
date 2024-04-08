@@ -19,14 +19,17 @@ using namespace std;
 namespace fs = std::filesystem;
 
 #define SERIES_LENGTH 2075260 * 1
-
 #define N_FILTERS 8
 #define FILTER_LENGTH 12032
+
+#define N_TEST 8 // Number of test to execute
+
+#define BLOCK_SIZE 64 // Dimension of block used in CUDA
 
 string CPU_flt_type = "ZMNCC";  // "SAD" or "ZMNCC"
 
 string GPU_flt_type = "ZMNCC_CUDA"; // "SAD_CUDA" or "ZMNCC_CUDA"
-string GPU_use_shared_mem = "SHARED"; // "SHARED": use shared memory, "NO": no shared memory 
+string GPU_use_shared_mem = "NO"; // "SHARED": use shared memory, "NO": no shared memory 
 
 void calculate_means_windowed(const vector<float>& values, vector<float>& means, const int window_size, const int series_length){
     #pragma omp parallel for

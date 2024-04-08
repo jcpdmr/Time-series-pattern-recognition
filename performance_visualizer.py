@@ -11,19 +11,19 @@ def extract_elaps_avg(data: list[tuple]):
 
     # Iterate through the result set
     for row in data:
-        n_threads = row[0]
-        elapsed_time = row[1]
+        x_var = row[0]
+        y_var = row[1]
         
         # If the number of threads is already in the dictionary append the elapsed time
-        if n_threads in average_elapsed_times:
-            average_elapsed_times[n_threads].append(elapsed_time)
+        if x_var in average_elapsed_times:
+            average_elapsed_times[x_var].append(y_var)
         # If the number of threads is not in the dictionary, initialize a list with the elapsed time
         else:
-            average_elapsed_times[n_threads] = [elapsed_time]
+            average_elapsed_times[x_var] = [y_var]
 
     # Calculate the average elapsed time for each number of threads
-    for n_threads, elapsed_times in average_elapsed_times.items():
-        average_elapsed_times[n_threads] = sum(elapsed_times) / len(elapsed_times)
+    for x_var, elapsed_times in average_elapsed_times.items():
+        average_elapsed_times[x_var] = sum(elapsed_times) / len(elapsed_times)
     
     # Sort the dictionary based on the value of the keys
     sorted_keys = sorted(average_elapsed_times.keys())
@@ -39,7 +39,7 @@ benchmark_file = "benchmark_results.txt"
 path_to_db = os.path.join(output_folder, database_file)
 path_to_benchmark = os.path.join(output_folder, benchmark_file)
 
-pattern = r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s+Series length: (\d+)\s+Filter length: (\d+)\s+Filter type: (\w+)\s+Elapsed: (\d+) ms(?:\s+N threads: (\d+))?'
+pattern = r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s+Series length: (\d+)\s+Filter length: (\d+)\s+Filter type: (\w+)\s+Elapsed: (\d+) ms(?:\s+(N threads: (\d+)))?(?:\s+(Block size: (\d+)))?'
 str_datetime_format = "%Y-%m-%d %H:%M:%S"
 
 # Check if the folder exist already
@@ -56,7 +56,7 @@ c = conn.cursor()
 
 # Create the table if it doesn't exist already
 c.execute('''CREATE TABLE IF NOT EXISTS benchmarks
-             (timestamp DATETIME, series_length INTEGER, filter_length INTEGER, filter_type TEXT, elapsed INTEGER, n_threads INTEGER)''')
+             (timestamp DATETIME, series_length INTEGER, filter_length INTEGER, filter_type TEXT, elapsed INTEGER, n_threads INTEGER, block_size INTEGER)''')
 
 # Check the timestamp of the last entry in the database
 c.execute('SELECT MAX(timestamp) FROM benchmarks')
@@ -68,18 +68,27 @@ if last_date_time is not None:
 with open(path_to_benchmark, 'r') as file:
     for line in file:
         match = re.match(pattern, line)
-        date_time = match.group(1)
-        series_length = int(match.group(2))
-        filter_length = int(match.group(3))
-        filter_type = match.group(4)
-        elapsed_time = int(match.group(5))
-        num_threads = int(match.group(6)) if match.group(6) else -1
-        timestamp = datetime.strptime(date_time, str_datetime_format)
-        data = (timestamp, series_length, filter_length, filter_type, elapsed_time, num_threads)
+        if match:
+            date_time = match.group(1)
+            series_length = int(match.group(2))
+            filter_length = int(match.group(3))
+            filter_type = match.group(4)
+            elapsed_time = int(match.group(5))
+            num_threads = -1
+            block_size = -1
+            if match.group(6):
+                if "N threads" in match.group(6):
+                    num_threads = int(match.group(7))
+            if match.group(8):
+                if "Block size" in match.group(8):
+                    block_size = int(match.group(9))
+            timestamp = datetime.strptime(date_time, str_datetime_format)
 
-        # Insert data into the database if it's newer than the last entry
-        if last_date_time is None or timestamp > last_date_time:
-            c.execute('INSERT INTO benchmarks VALUES (?,?,?,?,?,?)', data)
+            data = (timestamp, series_length, filter_length, filter_type, elapsed_time, num_threads, block_size)
+
+            # Insert data into the database if it's newer than the last entry
+            if last_date_time is None or timestamp > last_date_time:
+                c.execute('INSERT INTO benchmarks VALUES (?,?,?,?,?,?,?)', data)
 
 # Save changes
 conn.commit()               
@@ -194,6 +203,7 @@ ax.plot(dict_query_data.keys(), dict_query_data.values(), label="OpenMP", marker
 ax.set_ylabel('ms')
 ax.set_xlabel('# of threads')
 ax.set_title("ZMNCC performance")
+ax.set_xticks(list(dict_query_data.keys()))
 ax.legend()
 ax.grid(True, which="both")
 plt.savefig(os.path.join(output_visualizer_folder, "ZMNCC_nthreads"))
@@ -208,9 +218,40 @@ ax.plot(dict_query_data.keys(), dict_query_data.values(), label="OpenMP", marker
 ax.set_ylabel('ms')
 ax.set_xlabel('# of threads')
 ax.set_title("SAD performance")
+ax.set_xticks(list(dict_query_data.keys()))
 ax.legend()
 ax.grid(True, which="both")
 plt.savefig(os.path.join(output_visualizer_folder, "SAD_nthreads"))
+
+# Graph 7
+fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 10))
+
+query_data = c.execute("SELECT block_size, elapsed FROM benchmarks WHERE series_length = ? AND filter_length = ? AND filter_type = ? AND block_size != ?", (20752600, 12032, "SAD_CUDA", -1)).fetchall()
+dict_query_data = extract_elaps_avg(data=query_data)
+
+ax.plot(dict_query_data.keys(), dict_query_data.values(), label="CUDA", marker=".", markersize=12)
+ax.set_ylabel('ms')
+ax.set_xlabel('Block size')
+ax.set_title("SAD performance")
+ax.set_xticks(list(dict_query_data.keys()))
+ax.legend()
+ax.grid(True, which="both")
+plt.savefig(os.path.join(output_visualizer_folder, "SAD_blocksize"))
+
+# Graph 8
+fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10, 10))
+
+query_data = c.execute("SELECT block_size, elapsed FROM benchmarks WHERE series_length = ? AND filter_length = ? AND filter_type = ? AND block_size != ?", (2075260, 12032, "ZMNCC_CUDA_NO", -1)).fetchall()
+dict_query_data = extract_elaps_avg(data=query_data)
+
+ax.plot(dict_query_data.keys(), dict_query_data.values(), label="CUDA", marker=".", markersize=12)
+ax.set_ylabel('ms')
+ax.set_xlabel('Block size')
+ax.set_title("ZMNCC performance")
+ax.set_xticks(list(dict_query_data.keys()))
+ax.legend()
+ax.grid(True, which="both")
+plt.savefig(os.path.join(output_visualizer_folder, "ZMNCC_blocksize"))
 
 # Close the connection to the database
 conn.close()

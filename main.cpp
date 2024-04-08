@@ -63,7 +63,7 @@ int main() {
         omp_set_num_threads(n_threads);
         
         // Execute multiple test with same number of threads   
-        for(int n_test = 0; n_test < 3; n_test++){
+        for(int n_test = 0; n_test < N_TEST; n_test++){
             
             cout << "Executing benchmark..." << endl;
 

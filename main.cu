@@ -22,7 +22,6 @@ int main() {
 	values.reserve(SERIES_LENGTH);
 
     string line;
-
 	// Skip first line (because it contains the header row)
 	getline(file, line);
 
@@ -60,14 +59,12 @@ int main() {
     }
     const vector<float> filters = temp_filters;
 
-    for(int n_test = 0; n_test < 3; n_test++){
+    for(int n_test = 0; n_test < N_TEST; n_test++){
 
         cout << "Executing benchmark..." << endl;
     
         if(GPU_flt_type == "SAD_CUDA"){
             auto start_benchmark = chrono::high_resolution_clock::now();
-
-            const int block_size = 256;
 
             // Allocate CPU space for the result
             vector<float> SADs(N_FILTERS * SERIES_LENGTH, 0.0f);
@@ -82,8 +79,8 @@ int main() {
             checkCudaErrors(cudaMemcpy(d_values, values.data(), SERIES_LENGTH * sizeof(float), cudaMemcpyHostToDevice));
             checkCudaErrors(cudaMemcpy(d_filters , filters.data(), filters.size() * sizeof(float), cudaMemcpyHostToDevice));
 
-            const int n_blocks = (SERIES_LENGTH - FILTER_LENGTH + (block_size - 1)) / block_size;
-            calculate_SADs<<<n_blocks, block_size>>>(d_values, d_SADs, d_filters, FILTER_LENGTH, SERIES_LENGTH);
+            const int n_blocks = (SERIES_LENGTH - FILTER_LENGTH + (BLOCK_SIZE - 1)) / BLOCK_SIZE;
+            calculate_SADs<<<n_blocks, BLOCK_SIZE>>>(d_values, d_SADs, d_filters, FILTER_LENGTH, SERIES_LENGTH);
             checkCudaErrors(cudaGetLastError());
 
             // Wait for all kernels execution to finish
@@ -101,20 +98,20 @@ int main() {
             
             cout << "Benchmark elapsed time: " << duration_benchmark << " ms" << endl;
 
-            // Save data
-            for(int filter_idx = 0; filter_idx < N_FILTERS; filter_idx++){
-                string file_name = "../output_data/SAD"+ to_string(filter_idx) + "_filterlen" + to_string(FILTER_LENGTH) +".txt";
-                ofstream output_file(file_name);
-                if (output_file.is_open()) {
-                    for (int i = 0; i < SERIES_LENGTH; i++){
-                        output_file << SADs[filter_idx * SERIES_LENGTH + i] << "\n";
-                    }
-                    output_file.close();
-                    cout << "Saved successfully: " << file_name << endl;
-                } else {
-                    cerr << "Failed to open: " << file_name << endl;
-                }
-            }
+            // // Save data
+            // for(int filter_idx = 0; filter_idx < N_FILTERS; filter_idx++){
+            //     string file_name = "../output_data/SAD"+ to_string(filter_idx) + "_filterlen" + to_string(FILTER_LENGTH) +".txt";
+            //     ofstream output_file(file_name);
+            //     if (output_file.is_open()) {
+            //         for (int i = 0; i < SERIES_LENGTH; i++){
+            //             output_file << SADs[filter_idx * SERIES_LENGTH + i] << "\n";
+            //         }
+            //         output_file.close();
+            //         cout << "Saved successfully: " << file_name << endl;
+            //     } else {
+            //         cerr << "Failed to open: " << file_name << endl;
+            //     }
+            // }
 
             // Write benchmark result to a file
             string out = "../output_data/benchmark_results.txt";
@@ -126,7 +123,7 @@ int main() {
                 char buffer[80];
                 std::strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", std::localtime(&currentTime));
 
-                f << buffer << "   Series length: " << SERIES_LENGTH << "   Filter length: " << FILTER_LENGTH << "   Filter type: "<< GPU_flt_type << "   Elapsed: " << duration_benchmark << " ms" << endl;
+                f << buffer << "   Series length: " << SERIES_LENGTH << "   Filter length: " << FILTER_LENGTH << "   Filter type: "<< GPU_flt_type << "   Elapsed: " << duration_benchmark << " ms" << "   Block size: "<< BLOCK_SIZE << endl;
                 
                 std::cout << "Data saved successfully" << std::endl;
             }
@@ -189,22 +186,21 @@ int main() {
             
             auto start_benchmark = chrono::high_resolution_clock::now();
             
-            const int block_size = 256;
-            const int n_blocks = (SERIES_LENGTH - FILTER_LENGTH + (block_size - 1)) / block_size;
-            const int values_to_load_per_thread = (FILTER_LENGTH + block_size) / block_size;
-            const int threads_for_loading = (n_blocks * block_size) / values_to_load_per_thread;
+            const int n_blocks = (SERIES_LENGTH - FILTER_LENGTH + (BLOCK_SIZE - 1)) / BLOCK_SIZE;
+            const int values_to_load_per_thread = (FILTER_LENGTH + BLOCK_SIZE) / BLOCK_SIZE;
+            const int threads_for_loading = (n_blocks * BLOCK_SIZE) / values_to_load_per_thread;
 
             // Parallel execution 
-            calculate_means_windowed<<<n_blocks, block_size>>>(d_values, d_means, FILTER_LENGTH, SERIES_LENGTH);
+            calculate_means_windowed<<<n_blocks, BLOCK_SIZE>>>(d_values, d_means, FILTER_LENGTH, SERIES_LENGTH);
             checkCudaErrors(cudaGetLastError());
             // Wait for the kernel execution to finish to compute means
             checkCudaErrors(cudaDeviceSynchronize());
 
             if(GPU_use_shared_mem == "SHARED"){
-                calculate_stds_zmnccs_windowed_shared<<<n_blocks, block_size, (FILTER_LENGTH + block_size) * sizeof(float)>>>(d_values, d_means, d_stds, d_zmnccs, d_filters, d_filt_means, d_filt_stds, FILTER_LENGTH, SERIES_LENGTH, values_to_load_per_thread, threads_for_loading);
+                calculate_stds_zmnccs_windowed_shared<<<n_blocks, BLOCK_SIZE, (FILTER_LENGTH + BLOCK_SIZE) * sizeof(float)>>>(d_values, d_means, d_stds, d_zmnccs, d_filters, d_filt_means, d_filt_stds, FILTER_LENGTH, SERIES_LENGTH, values_to_load_per_thread, threads_for_loading);
             }
             else{
-                calculate_stds_zmnccs_windowed<<<n_blocks, block_size>>>(d_values, d_means, d_stds, d_zmnccs, d_filters, d_filt_means, d_filt_stds, FILTER_LENGTH, SERIES_LENGTH);
+                calculate_stds_zmnccs_windowed<<<n_blocks, BLOCK_SIZE>>>(d_values, d_means, d_stds, d_zmnccs, d_filters, d_filt_means, d_filt_stds, FILTER_LENGTH, SERIES_LENGTH);
             }
             checkCudaErrors(cudaGetLastError());
             // Wait for the kernel execution to finish compute stds and zmnccs
@@ -227,20 +223,20 @@ int main() {
             cudaFree(d_filt_means);
             cudaFree(d_filt_stds);
 
-            // Save data
-            for(int filter_idx = 0; filter_idx < N_FILTERS; filter_idx++){
-                string file_name = "../output_data/zmncc"+ to_string(filter_idx) + "_filterlen" + to_string(FILTER_LENGTH) +".txt";
-                ofstream output_file(file_name);
-                if (output_file.is_open()) {
-                    for (int i = 0; i < SERIES_LENGTH; i++) {
-                        output_file << zmnccs[filter_idx * SERIES_LENGTH + i] << "\n";
-                    }
-                    output_file.close();
-                    cout << "Saved successfully: " << file_name << endl;
-                } else {
-                    cerr << "Failed to open: " << file_name << endl;
-                }
-            }
+            // // Save data
+            // for(int filter_idx = 0; filter_idx < N_FILTERS; filter_idx++){
+            //     string file_name = "../output_data/zmncc"+ to_string(filter_idx) + "_filterlen" + to_string(FILTER_LENGTH) +".txt";
+            //     ofstream output_file(file_name);
+            //     if (output_file.is_open()) {
+            //         for (int i = 0; i < SERIES_LENGTH; i++) {
+            //             output_file << zmnccs[filter_idx * SERIES_LENGTH + i] << "\n";
+            //         }
+            //         output_file.close();
+            //         cout << "Saved successfully: " << file_name << endl;
+            //     } else {
+            //         cerr << "Failed to open: " << file_name << endl;
+            //     }
+            // }
 
             // Write benchmark result to a file
             string out = "../output_data/benchmark_results.txt";
@@ -252,7 +248,7 @@ int main() {
                 char buffer[80];
                 std::strftime(buffer, 80, "%Y-%m-%d %H:%M:%S", std::localtime(&currentTime));
 
-                f << buffer << "   Series length: " << SERIES_LENGTH << "   Filter length: " << FILTER_LENGTH << "   Filter type: "<< GPU_flt_type + "_" + GPU_use_shared_mem << "   Elapsed: " << duration_benchmark << " ms" << endl;
+                f << buffer << "   Series length: " << SERIES_LENGTH << "   Filter length: " << FILTER_LENGTH << "   Filter type: "<< GPU_flt_type + "_" + GPU_use_shared_mem << "   Elapsed: " << duration_benchmark << " ms" << "   Block size: "<< BLOCK_SIZE  << endl;
                 
                 std::cout << "Data saved successfully" << std::endl;
             }
