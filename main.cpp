@@ -99,18 +99,20 @@ int main() {
                 cout << "Benchmark elapsed time: " << duration_benchmark << " ms" << endl;
 
                 // Save data
-                #pragma omp parallel for
-                for(int filter_idx = 0; filter_idx < N_FILTERS; filter_idx++){
-                    string file_name = "../output_data/SAD"+ to_string(filter_idx) + "_filterlen" + to_string(FILTER_LENGTH) + ".txt";
-                    ofstream output_file(file_name);
-                    if (output_file.is_open()) {
-                        for (int i = 0; i < SERIES_LENGTH; i++){
-                            output_file << SADs[filter_idx * SERIES_LENGTH + i] << "\n";
+                if (save_data){
+                    #pragma omp parallel for
+                    for(int filter_idx = 0; filter_idx < N_FILTERS; filter_idx++){
+                        string file_name = "../output_data/SAD"+ to_string(filter_idx) + "_filterlen" + to_string(FILTER_LENGTH) + ".txt";
+                        ofstream output_file(file_name);
+                        if (output_file.is_open()) {
+                            for (int i = 0; i < SERIES_LENGTH; i++){
+                                output_file << SADs[filter_idx * SERIES_LENGTH + i] << "\n";
+                            }
+                            output_file.close();
+                            cout << "Saved successfully: " << file_name << endl;
+                        } else {
+                            cerr << "Failed to open: " << file_name << endl;
                         }
-                        output_file.close();
-                        cout << "Saved successfully: " << file_name << endl;
-                    } else {
-                        cerr << "Failed to open: " << file_name << endl;
                     }
                 }
 
@@ -126,7 +128,7 @@ int main() {
 
                     f << buffer << "   Series length: " << SERIES_LENGTH << "   Filter length: " << FILTER_LENGTH << "   Filter type: "<< CPU_flt_type << "   Elapsed: " << duration_benchmark << " ms"  << "   N threads: " << n_threads << endl;
                     
-                    std::cout << "Data saved successfully" << std::endl;
+                    std::cout << "Benchmark saved successfully" << std::endl;
                 }
                 else {
                     std::cerr << "Unable to open the file" << std::endl;
@@ -182,18 +184,20 @@ int main() {
                 cout << "Benchmark elapsed time: " << duration_benchmark << " ms" << endl;
                 
                 // Save data
-                #pragma omp parallel for
-                for(int filter_idx = 0; filter_idx < N_FILTERS; filter_idx++){
-                    string file_name = "../output_data/zmncc"+ to_string(filter_idx) + "_filterlen" + to_string(FILTER_LENGTH) +".txt";
-                    ofstream output_file(file_name);
-                    if (output_file.is_open()) {
-                        for (int i = 0; i < SERIES_LENGTH; i++){
-                            output_file << zmnccs[filter_idx * SERIES_LENGTH + i] << "\n";
+                if (save_data){
+                    #pragma omp parallel for
+                    for(int filter_idx = 0; filter_idx < N_FILTERS; filter_idx++){
+                        string file_name = "../output_data/zmncc"+ to_string(filter_idx) + "_filterlen" + to_string(FILTER_LENGTH) +".txt";
+                        ofstream output_file(file_name);
+                        if (output_file.is_open()) {
+                            for (int i = 0; i < SERIES_LENGTH; i++){
+                                output_file << zmnccs[filter_idx * SERIES_LENGTH + i] << "\n";
+                            }
+                            output_file.close();
+                            cout << "Saved successfully: " << file_name << endl;
+                        } else {
+                            cerr << "Failed to open: " << file_name << endl;
                         }
-                        output_file.close();
-                        cout << "Saved successfully: " << file_name << endl;
-                    } else {
-                        cerr << "Failed to open: " << file_name << endl;
                     }
                 }
 
@@ -209,7 +213,7 @@ int main() {
 
                     f << buffer << "   Series length: " << SERIES_LENGTH << "   Filter length: " << FILTER_LENGTH << "   Filter type: "<< CPU_flt_type << "   Elapsed: " << duration_benchmark << " ms" << "   N threads: " << n_threads  << endl;
                     
-                    std::cout << "Data saved successfully" << std::endl;
+                    std::cout << "Benchmark saved successfully" << std::endl;
                 }
                 else {
                     std::cerr << "Unable to open the file" << std::endl;

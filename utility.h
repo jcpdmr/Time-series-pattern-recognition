@@ -29,7 +29,9 @@ namespace fs = std::filesystem;
 string CPU_flt_type = "ZMNCC";  // "SAD" or "ZMNCC"
 
 string GPU_flt_type = "ZMNCC_CUDA"; // "SAD_CUDA" or "ZMNCC_CUDA"
-string GPU_use_shared_mem = "NO"; // "SHARED": use shared memory, "NO": no shared memory 
+string GPU_use_shared_mem = "NO"; // "SHARED": use shared memory, "NO": no shared memory
+
+bool save_data = false; // Decide if save computing result SAD and ZMNCC or skip save
 
 void calculate_means_windowed(const vector<float>& values, vector<float>& means, const int window_size, const int series_length){
     #pragma omp parallel for
